@@ -131,7 +131,8 @@ export const getStoryInfo = async (req: AuthRequest, res: Response) => {
       success: true,
       data: {
         ...story,
-        coverLink
+        chapterCount: Number(story.chapterCount),
+        coverLink 
       }
     });
   } catch (error: any) {
