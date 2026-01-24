@@ -109,3 +109,32 @@ export const getStoryChapters = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ success: false, error: error.message });
   }
 };
+
+export const getStoryInfo = async (req: AuthRequest, res: Response) => {
+  try {
+    const storyId = parseInt(req.params.storyId);
+    if (isNaN(storyId)) {
+      return res.status(400).json({ success: false, error: "Invalid Story ID" });
+    }
+
+    const story = await StoryService.getStoryById(storyId);
+
+    if (!story) {
+      return res.status(404).json({ success: false, error: "Story not found" });
+    }
+
+    const coverLink = story.coverImagePath 
+      ? `${req.protocol}://${req.get('host')}/assets/images/poster/stories/${story.coverImagePath}` 
+      : null;
+
+    res.status(200).json({
+      success: true,
+      data: {
+        ...story,
+        coverLink
+      }
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};

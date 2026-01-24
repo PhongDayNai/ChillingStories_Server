@@ -96,3 +96,22 @@ export const incrementFavoriteCount = async (storyId: number): Promise<void> => 
   const sql = `UPDATE stories SET favorite_count = favorite_count + 1 WHERE id = ?`;
   await pool.execute(sql, [storyId]);
 };
+
+export const getStoryById = async (storyId: number): Promise<IStory | null> => {
+  const sql = `
+    SELECT 
+      id, 
+      title, 
+      description, 
+      cover_image_path as coverImagePath, 
+      author_id as authorId, 
+      status, 
+      view_count as viewCount, 
+      favorite_count as favoriteCount, 
+      created_at as createdAt 
+    FROM stories 
+    WHERE id = ?`;
+    
+  const [rows] = await pool.execute<RowDataPacket[]>(sql, [storyId]);
+  return rows.length > 0 ? (rows[0] as IStory) : null;
+};

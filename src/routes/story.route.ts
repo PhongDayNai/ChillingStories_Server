@@ -47,4 +47,11 @@ router.post(
  */
 router.get('/:storyId/chapters', StoryController.getStoryChapters);
 
+/**
+ * @route   GET /api/stories/:storyId/info
+ * @desc    Get story metadata only (no chapters)
+ * @access  Public
+ */
+router.get('/:storyId/info', StoryController.getStoryInfo);
+
 export default router;
