@@ -1,0 +1,50 @@
+// src/routes/story.route.ts
+import { Router } from 'express';
+import * as StoryController from '../controllers/story.controller';
+import { authenticateToken } from '../middlewares/auth.middleware';
+import { authorize } from '../middlewares/role.middleware';
+import { chapterUpload, posterUpload } from '../middlewares/upload.middleware';
+
+const router = Router();
+
+/**
+ * @route   POST /api/stories
+ * @desc    Create story metadata and upload poster image
+ * @access  Private (Author/Admin)
+ */
+router.post(
+  '/', 
+  authenticateToken, 
+  authorize(['author', 'admin']), 
+  posterUpload.single('poster'), // Expects an image file with key 'poster'
+  StoryController.createStory
+);
+
+/**
+ * @route   GET /api/stories
+ * @desc    Search stories (Uses FULLTEXT index)
+ * @access  Public
+ */
+router.get('/', StoryController.getAllStories);
+
+/**
+ * @route   POST /api/stories/upload-chapters
+ * @desc    Upload multiple .txt/.md files as chapters
+ * @access  Private (Author/Admin)
+ */
+router.post(
+  '/upload-chapters',
+  authenticateToken,
+  authorize(['author', 'admin']),
+  chapterUpload.array('chapters', 50),
+  StoryController.addChaptersFromFiles
+);
+
+/**
+ * @route   GET /api/stories/:storyId/chapters
+ * @desc    Get all chapters and increment view count
+ * @access  Public
+ */
+router.get('/:storyId/chapters', StoryController.getStoryChapters);
+
+export default router;

@@ -1,11 +1,13 @@
 import express, { Express } from 'express';
 import http from 'http';
+import path from 'path';
 import { Server } from 'socket.io';
 import { config as dotenvConfig } from 'dotenv';
 import cors from 'cors';
 
 import authRoutes from './routes/auth.route';
 import userRoutes from './routes/user.route';
+import storyRoutes from './routes/story.route';
 import { errorHandler } from './middlewares/error.middleware';
 
 dotenvConfig();
@@ -19,9 +21,12 @@ const io = new Server(server, {
 app.use(cors());
 app.use(express.json());
 
+app.use('/assets', express.static(path.join(__dirname, '../assets')));
+
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/stories', storyRoutes);
 
 app.get('/', (req, res) => {
     res.send('Chilling Stories SQL API is running 🚀');
