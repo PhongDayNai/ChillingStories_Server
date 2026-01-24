@@ -4,10 +4,11 @@ export interface IStory {
   id: number;
   title: string;
   description?: string;
-  posterFilename?: string;
+  coverImagePath?: string;
   authorId?: number;
   status: StoryStatus;
   viewCount: number;
+  favoriteCount: number;
   createdAt: Date;
 }
 
@@ -30,7 +31,7 @@ export interface IReadingProgress {
 export interface ICreateStoryRequest {
   title: string;
   description?: string;
-  posterFilename?: string | null;
+  coverImagePath?: string | null;
 }
 
 export interface ICreateChapterRequest {

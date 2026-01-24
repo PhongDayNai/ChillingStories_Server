@@ -12,25 +12,25 @@ export const createStory = async (req: AuthRequest, res: Response) => {
     const authorId = req.user?.id;
     if (!authorId) return res.status(401).json({ success: false, error: "Unauthorized" });
 
-    const posterFilename = req.file ? req.file.filename : null;
+    const coverImagePath = req.file ? req.file.filename : null;
 
     const storyData: ICreateStoryRequest = {
       title: req.body.title,
       description: req.body.description,
-      posterFilename: posterFilename
+      coverImagePath: coverImagePath
     };
 
     const storyId = await StoryService.createStory(authorId, storyData);
     
-    const imageLink = posterFilename 
-      ? `${req.protocol}://${req.get('host')}/assets/images/poster/stories/${posterFilename}` 
+    const imageLink = coverImagePath 
+      ? `${req.protocol}://${req.get('host')}/assets/images/poster/stories/${coverImagePath}` 
       : null;
 
     res.status(201).json({
       success: true,
       data: { 
         storyId,
-        posterFilename,
+        coverImagePath,
         posterLink: imageLink 
       }
     });

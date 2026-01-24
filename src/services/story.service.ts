@@ -7,18 +7,18 @@ import { IStory, IChapter, ICreateStoryRequest, ICreateChapterRequest } from '..
 import { ResultSetHeader, RowDataPacket } from 'mysql2';
 
 export const createStory = async (authorId: number, data: ICreateStoryRequest): Promise<number> => {
-  const sql = `INSERT INTO stories (title, description, poster_filename, author_id) VALUES (?, ?, ?, ?)`;
+  const sql = `INSERT INTO stories (title, description, cover_image_path, author_id) VALUES (?, ?, ?, ?)`;
   const [result] = await pool.execute<ResultSetHeader>(sql, [
     data.title, 
     data.description || null, 
-    data.posterFilename || null, // Stores the string name
+    data.coverImagePath || null,
     authorId
   ]);
   return result.insertId;
 };
 
 export const searchStories = async (keyword?: string): Promise<IStory[]> => {
-  let sql = `SELECT id, title, description, poster_filename as posterFilename, 
+  let sql = `SELECT id, title, description, cover_image_path as coverImagePath, 
              author_id as authorId, status, view_count as viewCount, created_at as createdAt 
              FROM stories`;
   const params: any[] = [];
@@ -89,5 +89,10 @@ export const getChaptersByStoryId = async (storyId: number): Promise<IChapter[]>
 
 export const incrementViewCount = async (storyId: number): Promise<void> => {
   const sql = `UPDATE stories SET view_count = view_count + 1 WHERE id = ?`;
+  await pool.execute(sql, [storyId]);
+};
+
+export const incrementFavoriteCount = async (storyId: number): Promise<void> => {
+  const sql = `UPDATE stories SET favorite_count = favorite_count + 1 WHERE id = ?`;
   await pool.execute(sql, [storyId]);
 };
