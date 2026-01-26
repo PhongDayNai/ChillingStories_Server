@@ -26,5 +26,9 @@ export interface IUserPayload {
 }
 
 export interface AuthRequest extends Request {
-  user?: IUserPayload;
+  user?: {
+    id: number;
+    username: string;
+    role: 'admin' | 'author' | 'viewer';
+  };
 }

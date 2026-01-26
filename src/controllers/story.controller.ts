@@ -139,3 +139,26 @@ export const getStoryInfo = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ success: false, error: error.message });
   }
 };
+
+export const getChapterContent = async (req: AuthRequest, res: Response) => {
+  try {
+    const chapterId = parseInt(req.params.chapterId);
+    
+    if (isNaN(chapterId)) {
+      return res.status(400).json({ success: false, error: "Invalid Chapter ID" });
+    }
+
+    const chapter = await StoryService.getChapterById(chapterId);
+
+    if (!chapter) {
+      return res.status(404).json({ success: false, error: "Chapter not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: chapter
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};

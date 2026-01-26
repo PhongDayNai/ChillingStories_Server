@@ -116,3 +116,19 @@ export const getStoryById = async (storyId: number): Promise<any | null> => {
   const [rows] = await pool.execute<RowDataPacket[]>(sql, [storyId]);
   return rows.length > 0 ? rows[0] : null;
 };
+
+export const getChapterById = async (chapterId: number): Promise<IChapter | null> => {
+  const sql = `
+    SELECT 
+      id, 
+      story_id as storyId, 
+      order_num as orderNum, 
+      title, 
+      content, 
+      created_at as createdAt 
+    FROM chapters 
+    WHERE id = ?`;
+    
+  const [rows] = await pool.execute<RowDataPacket[]>(sql, [chapterId]);
+  return rows.length > 0 ? (rows[0] as IChapter) : null;
+};
