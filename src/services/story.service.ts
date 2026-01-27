@@ -92,9 +92,36 @@ export const incrementViewCount = async (storyId: number): Promise<void> => {
   await pool.execute(sql, [storyId]);
 };
 
-export const incrementFavoriteCount = async (storyId: number): Promise<void> => {
-  const sql = `UPDATE stories SET favorite_count = favorite_count + 1 WHERE id = ?`;
-  await pool.execute(sql, [storyId]);
+export const toggleFavorite = async (userId: number, storyId: number): Promise<{ isFavorited: boolean }> => {
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    const [existing] = await connection.execute<RowDataPacket[]>(
+      'SELECT 1 FROM favorites WHERE user_id = ? AND story_id = ?',
+      [userId, storyId]
+    );
+
+    let isFavorited = false;
+
+    if (existing.length > 0) {
+      await connection.execute('DELETE FROM favorites WHERE user_id = ? AND story_id = ?', [userId, storyId]);
+      await connection.execute('UPDATE stories SET favorite_count = GREATEST(0, favorite_count - 1) WHERE id = ?', [storyId]);
+      isFavorited = false;
+    } else {
+      await connection.execute('INSERT INTO favorites (user_id, story_id) VALUES (?, ?)', [userId, storyId]);
+      await connection.execute('UPDATE stories SET favorite_count = favorite_count + 1 WHERE id = ?', [storyId]);
+      isFavorited = true;
+    }
+
+    await connection.commit();
+    return { isFavorited };
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
 };
 
 export const getStoryById = async (storyId: number): Promise<any | null> => {
@@ -147,4 +174,10 @@ export const getChapterByOrder = async (storyId: number, orderNum: number): Prom
     
   const [rows] = await pool.execute<RowDataPacket[]>(sql, [storyId, orderNum]);
   return rows.length > 0 ? (rows[0] as IChapter) : null;
+};
+
+export const updateChapterTitle = async (chapterId: number, newTitle: string): Promise<boolean> => {
+  const sql = `UPDATE chapters SET title = ? WHERE id = ?`;
+  const [result] = await pool.execute<ResultSetHeader>(sql, [newTitle, chapterId]);
+  return result.affectedRows > 0;
 };

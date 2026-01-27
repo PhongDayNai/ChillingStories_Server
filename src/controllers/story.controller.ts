@@ -186,3 +186,52 @@ export const getChapterByNumber = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ success: false, error: error.message });
   }
 };
+
+export const addView = async (req: AuthRequest, res: Response) => {
+  try {
+    const storyId = parseInt(req.params.storyId);
+    if (isNaN(storyId)) return res.status(400).json({ success: false, error: "Invalid Story ID" });
+
+    await StoryService.incrementViewCount(storyId);
+    res.status(200).json({ success: true, message: "View count updated" });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+export const toggleFavoriteStatus = async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    const storyId = parseInt(req.params.storyId);
+
+    if (!userId) return res.status(401).json({ success: false, error: "Unauthorized" });
+    if (isNaN(storyId)) return res.status(400).json({ success: false, error: "Invalid Story ID" });
+
+    const result = await StoryService.toggleFavorite(userId, storyId);
+
+    res.status(200).json({ 
+      success: true, 
+      isFavorited: result.isFavorited,
+      message: result.isFavorited ? "Added to favorites" : "Removed from favorites"
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+export const updateChapterInfo = async (req: AuthRequest, res: Response) => {
+  try {
+    const chapterId = parseInt(req.params.chapterId);
+    const { title } = req.body;
+
+    if (isNaN(chapterId)) return res.status(400).json({ success: false, error: "Invalid Chapter ID" });
+    if (!title) return res.status(400).json({ success: false, error: "Title is required" });
+
+    const updated = await StoryService.updateChapterTitle(chapterId, title);
+    if (!updated) return res.status(404).json({ success: false, error: "Chapter not found" });
+
+    res.status(200).json({ success: true, message: "Chapter title updated" });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};

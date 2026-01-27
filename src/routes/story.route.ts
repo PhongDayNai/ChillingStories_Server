@@ -68,4 +68,30 @@ router.get('/chapters/:chapterId', StoryController.getChapterContent);
  */
 router.get('/:storyId/chapters/:orderNum', StoryController.getChapterByNumber);
 
+/**
+ * @route   PATCH /api/stories/:storyId/view
+ * @desc    Increment story view count
+ * @access  Public
+ */
+router.patch('/:storyId/view', StoryController.addView);
+
+/**
+ * @route   POST /api/stories/:storyId/favorite
+ * @desc    Toggle favorite (Add if not exists, remove if it does)
+ * @access  Private (Authenticated users)
+ */
+router.post('/:storyId/favorite', authenticateToken, StoryController.toggleFavoriteStatus);
+
+/**
+ * @route   PATCH /api/stories/chapters/:chapterId/title
+ * @desc    Update a specific chapter's title
+ * @access  Private (Author/Admin only)
+ */
+router.patch(
+  '/chapters/:chapterId/title', 
+  authenticateToken, 
+  authorize(['author', 'admin']), 
+  StoryController.updateChapterInfo
+);
+
 export default router;
