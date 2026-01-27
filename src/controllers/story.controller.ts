@@ -40,6 +40,35 @@ export const createStory = async (req: AuthRequest, res: Response) => {
 };
 
 /**
+ * Handle full story metadata creation
+ */
+export const createStoryWithGenres = async (req: AuthRequest, res: Response) => {
+  try {
+    const authorId = req.user?.id;
+    if (!authorId) return res.status(401).json({ success: false, error: "Unauthorized" });
+
+    const posterFilename = req.file ? req.file.filename : null;
+    
+    const genres = req.body.genres ? JSON.parse(req.body.genres) : [];
+
+    const storyData = {
+      title: req.body.title,
+      description: req.body.description,
+      coverImagePath: posterFilename
+    };
+
+    const storyId = await StoryService.createStoryWithGenres(authorId, storyData, genres);
+    
+    res.status(201).json({
+      success: true,
+      data: { storyId, genresAdded: genres }
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+/**
  * Search and list stories
  */
 export const getAllStories = async (req: AuthRequest, res: Response) => {

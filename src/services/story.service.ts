@@ -17,6 +17,52 @@ export const createStory = async (authorId: number, data: ICreateStoryRequest): 
   return result.insertId;
 };
 
+export const createStoryWithGenres = async (authorId: number, data: ICreateStoryRequest, genres: string[]): Promise<number> => {
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    const storySql = `INSERT INTO stories (title, description, cover_image_path, author_id) VALUES (?, ?, ?, ?)`;
+    const [storyResult] = await connection.execute<ResultSetHeader>(storySql, [
+      data.title, 
+      data.description || null, 
+      data.coverImagePath || null,
+      authorId
+    ]);
+    const storyId = storyResult.insertId;
+
+    if (genres && genres.length > 0) {
+      for (let genreName of genres) {
+        const normalizedGenre = genreName.trim().toLowerCase();
+
+        await connection.execute(
+          'INSERT IGNORE INTO genres (name) VALUES (?)', 
+          [normalizedGenre]
+        );
+
+        const [genreRows] = await connection.execute<RowDataPacket[]>(
+          'SELECT id FROM genres WHERE name = ?', 
+          [normalizedGenre]
+        );
+        const genreId = genreRows[0].id;
+
+        await connection.execute(
+          'INSERT INTO story_genres (story_id, genre_id) VALUES (?, ?)', 
+          [storyId, genreId]
+        );
+      }
+    }
+
+    await connection.commit();
+    return storyId;
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+};
+
 export const searchStories = async (keyword?: string): Promise<IStory[]> => {
   let sql = `SELECT id, title, description, cover_image_path as coverImagePath, 
              author_id as authorId, status, view_count as viewCount, created_at as createdAt 
