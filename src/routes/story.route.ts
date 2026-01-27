@@ -126,4 +126,25 @@ router.put(
   StoryController.updateGenres
 );
 
+/**
+ * @route   GET /api/stories/top/new
+ * @desc    Get 30 most recently created stories
+ * @access  Public
+ */
+router.get('/top/new', StoryController.getTopNew);
+
+/**
+ * @route   GET /api/stories/top/views
+ * @desc    Get top 30 stories by view count
+ * @access  Public
+ */
+router.get('/top/views', StoryController.getTopViewed);
+
+/**
+ * @route   GET /api/stories/top/favorites
+ * @desc    Get top 30 stories by favorite count
+ * @access  Public
+ */
+router.get('/top/favorites', StoryController.getTopFavorited);
+
 export default router;

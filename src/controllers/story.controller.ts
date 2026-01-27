@@ -303,3 +303,72 @@ export const updateGenres = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ success: false, error: error.message });
   }
 };
+
+/**
+ * Get the 30 newest stories
+ */
+export const getTopNew = async (req: AuthRequest, res: Response) => {
+  try {
+    const stories = await StoryService.getNewestStories();
+    
+    const formattedStories = stories.map(story => ({
+      ...story,
+      chapterCount: Number(story.chapterCount),
+      coverLink: story.coverImagePath 
+        ? `${req.protocol}://${req.get('host')}/assets/images/poster/stories/${story.coverImagePath}` 
+        : null
+    }));
+
+    return res.status(200).json({ success: true, data: formattedStories });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+/**
+ * Get top 30 stories by views
+ */
+export const getTopViewed = async (req: AuthRequest, res: Response) => {
+  try {
+    const stories = await StoryService.getTopStoriesByView();
+    
+    const formattedStories = stories.map(story => ({
+      ...story,
+      chapterCount: Number(story.chapterCount),
+      coverLink: story.coverImagePath 
+        ? `${req.protocol}://${req.get('host')}/assets/images/poster/stories/${story.coverImagePath}` 
+        : null
+    }));
+
+    return res.status(200).json({ 
+      success: true, 
+      data: formattedStories 
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+/**
+ * Get top 30 stories by favorites
+ */
+export const getTopFavorited = async (req: AuthRequest, res: Response) => {
+  try {
+    const stories = await StoryService.getTopStoriesByFavorite();
+    
+    const formattedStories = stories.map(story => ({
+      ...story,
+      chapterCount: Number(story.chapterCount),
+      coverLink: story.coverImagePath 
+        ? `${req.protocol}://${req.get('host')}/assets/images/poster/stories/${story.coverImagePath}` 
+        : null
+    }));
+
+    return res.status(200).json({ 
+      success: true, 
+      data: formattedStories 
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+};

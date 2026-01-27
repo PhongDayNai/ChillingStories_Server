@@ -268,3 +268,49 @@ export const updateStoryGenres = async (storyId: number, genres: string[]): Prom
     connection.release();
   }
 };
+
+export const getNewestStories = async (): Promise<any[]> => {
+  const sql = `
+    SELECT 
+      s.id, s.title, s.description, s.cover_image_path as coverImagePath, 
+      s.author_id as authorId, s.status, s.view_count as viewCount, 
+      s.favorite_count as favoriteCount, s.created_at as createdAt,
+      (SELECT COUNT(*) FROM chapters WHERE story_id = s.id) as chapterCount
+    FROM stories s
+    ORDER BY s.created_at DESC 
+    LIMIT 30`;
+    
+  const [rows] = await pool.execute<RowDataPacket[]>(sql);
+  return rows;
+};
+
+export const getTopStoriesByView = async (): Promise<any[]> => {
+  const sql = `
+    SELECT 
+      s.id, s.title, s.description, s.cover_image_path as coverImagePath, 
+      s.author_id as authorId, s.status, s.view_count as viewCount, 
+      s.favorite_count as favoriteCount, s.created_at as createdAt,
+      (SELECT COUNT(*) FROM chapters WHERE story_id = s.id) as chapterCount
+    FROM stories s
+    ORDER BY s.view_count DESC 
+    LIMIT 30`;
+    
+  const [rows] = await pool.execute<RowDataPacket[]>(sql);
+  return rows;
+};
+
+
+export const getTopStoriesByFavorite = async (): Promise<any[]> => {
+  const sql = `
+    SELECT 
+      s.id, s.title, s.description, s.cover_image_path as coverImagePath, 
+      s.author_id as authorId, s.status, s.view_count as viewCount, 
+      s.favorite_count as favoriteCount, s.created_at as createdAt,
+      (SELECT COUNT(*) FROM chapters WHERE story_id = s.id) as chapterCount
+    FROM stories s
+    ORDER BY s.favorite_count DESC 
+    LIMIT 30`;
+    
+  const [rows] = await pool.execute<RowDataPacket[]>(sql);
+  return rows;
+};
