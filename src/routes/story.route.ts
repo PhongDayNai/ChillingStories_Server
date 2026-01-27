@@ -61,4 +61,11 @@ router.get('/:storyId/info', StoryController.getStoryInfo);
  */
 router.get('/chapters/:chapterId', StoryController.getChapterContent);
 
+/**
+ * @route   GET /api/stories/:storyId/chapters/:orderNum
+ * @desc    Get chapter content by story ID and chapter number
+ * @access  Public
+ */
+router.get('/:storyId/chapters/:orderNum', StoryController.getChapterByNumber);
+
 export default router;
