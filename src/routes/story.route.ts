@@ -107,4 +107,23 @@ router.patch(
   StoryController.updateChapterInfo
 );
 
+/**
+ * @route   GET /api/stories/genres/all
+ * @desc    Get all available genres
+ * @access  Public
+ */
+// router.get('/genres/all', StoryController.fetchAllGenres);
+
+/**
+ * @route   PUT /api/stories/:storyId/genres
+ * @desc    Update genres for a specific story
+ * @access  Private (Author/Admin)
+ */
+router.put(
+  '/:storyId/genres', 
+  authenticateToken, 
+  authorize(['author', 'admin']), 
+  StoryController.updateGenres
+);
+
 export default router;

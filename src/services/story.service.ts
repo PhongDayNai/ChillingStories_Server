@@ -3,7 +3,7 @@ import { Response } from 'express';
 import { pool } from '../config/dbConfig';
 import { AuthRequest } from '../models/user.model';
 import * as StoryService from '../services/story.service';
-import { IStory, IChapter, ICreateStoryRequest, ICreateChapterRequest } from '../models/story.model';
+import { IStory, IChapter, ICreateStoryRequest, ICreateChapterRequest, IGenre } from '../models/story.model';
 import { ResultSetHeader, RowDataPacket } from 'mysql2';
 
 export const createStory = async (authorId: number, data: ICreateStoryRequest): Promise<number> => {
@@ -226,4 +226,45 @@ export const updateChapterTitle = async (chapterId: number, newTitle: string): P
   const sql = `UPDATE chapters SET title = ? WHERE id = ?`;
   const [result] = await pool.execute<ResultSetHeader>(sql, [newTitle, chapterId]);
   return result.affectedRows > 0;
+};
+
+export const getAllGenres = async (): Promise<IGenre[]> => {
+  const sql = `SELECT id, name FROM genres ORDER BY name ASC`;
+  const [rows] = await pool.execute<RowDataPacket[]>(sql);
+  return rows as IGenre[];
+};
+
+export const updateStoryGenres = async (storyId: number, genres: string[]): Promise<void> => {
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    await connection.execute('DELETE FROM story_genres WHERE story_id = ?', [storyId]);
+
+    if (genres && genres.length > 0) {
+      for (let genreName of genres) {
+        const normalizedGenre = genreName.trim().toLowerCase();
+
+        await connection.execute('INSERT IGNORE INTO genres (name) VALUES (?)', [normalizedGenre]);
+        
+        const [genreRows] = await connection.execute<RowDataPacket[]>(
+          'SELECT id FROM genres WHERE name = ?', 
+          [normalizedGenre]
+        );
+        const genreId = genreRows[0].id;
+
+        await connection.execute(
+          'INSERT INTO story_genres (story_id, genre_id) VALUES (?, ?)', 
+          [storyId, genreId]
+        );
+      }
+    }
+
+    await connection.commit();
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
 };

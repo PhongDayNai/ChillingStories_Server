@@ -40,3 +40,8 @@ export interface ICreateChapterRequest {
   title: string;
   content: string;
 }
+
+export interface IGenre {
+  id: number;
+  name: string;
+}

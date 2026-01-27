@@ -264,3 +264,42 @@ export const updateChapterInfo = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ success: false, error: error.message });
   }
 };
+
+/**
+ * Fetch list of all genres for the app's filter/selection menus
+ */
+export const fetchAllGenres = async (req: Request, res: Response) => {
+  try {
+    const genres = await StoryService.getAllGenres();
+    
+    res.status(200).json({ 
+      success: true, 
+      data: genres 
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+/**
+ * Update genre assignments for a story
+ */
+export const updateGenres = async (req: AuthRequest, res: Response) => {
+  try {
+    const storyId = parseInt(req.params.storyId);
+    const { genres } = req.body;
+
+    if (isNaN(storyId)) return res.status(400).json({ success: false, error: "Invalid Story ID" });
+    if (!Array.isArray(genres)) return res.status(400).json({ success: false, error: "Genres must be an array" });
+
+    await StoryService.updateStoryGenres(storyId, genres);
+
+    res.status(200).json({ 
+      success: true, 
+      message: "Story genres updated successfully",
+      updatedGenres: genres 
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
