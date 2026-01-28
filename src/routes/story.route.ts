@@ -208,4 +208,11 @@ router.get('/personalized/favorites', authenticateToken, StoryController.getTopF
  */
 router.get('/personalized/author/:userId', authenticateToken, StoryController.getStoriesByAuthorForUser);
 
+/**
+ * @route   GET /api/stories/me/favorites
+ * @desc    Get all stories favorited by the current user
+ * @access  Private (Authenticated)
+ */
+router.get('/me/favorites', authenticateToken, StoryController.getMyFavorites);
+
 export default router;

@@ -431,3 +431,22 @@ export const getStoriesByAuthorForUser = async (authorId: number, currentUserId?
   const [rows] = await pool.execute<RowDataPacket[]>(sql, [currentUserId || 0, authorId]);
   return rows;
 };
+
+export const getFavoritedStories = async (userId: number): Promise<any[]> => {
+  const sql = `
+    SELECT 
+      s.id, s.title, s.description, s.cover_image_path as coverImagePath, 
+      s.author_id as authorId, u.username as authorName,
+      s.status, s.view_count as viewCount, s.favorite_count as favoriteCount, 
+      s.created_at as createdAt,
+      (SELECT COUNT(*) FROM chapters WHERE story_id = s.id) as chapterCount,
+      1 as isFavorited
+    FROM favorites f
+    JOIN stories s ON f.story_id = s.id
+    LEFT JOIN users u ON s.author_id = u.id
+    WHERE f.user_id = ?
+    ORDER BY s.created_at DESC`;
+    
+  const [rows] = await pool.execute<RowDataPacket[]>(sql, [userId]);
+  return rows;
+};

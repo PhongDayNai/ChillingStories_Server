@@ -575,3 +575,28 @@ export const getStoriesByAuthorForUser = async (req: AuthRequest, res: Response)
     return res.status(500).json({ success: false, error: error.message });
   }
 };
+
+export const getMyFavorites = async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    
+    if (!userId) {
+      return res.status(401).json({ success: false, error: "Unauthorized" });
+    }
+
+    const stories = await StoryService.getFavoritedStories(userId);
+    
+    const formattedStories = stories.map(story => ({
+      ...story,
+      chapterCount: Number(story.chapterCount),
+      isFavorited: true,
+      coverLink: story.coverImagePath 
+        ? `${req.protocol}://${req.get('host')}/assets/images/poster/stories/${story.coverImagePath}` 
+        : null
+    }));
+
+    return res.status(200).json({ success: true, data: formattedStories });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+};
