@@ -83,6 +83,51 @@ export const getAllStories = async (req: AuthRequest, res: Response) => {
 };
 
 /**
+ * Handle single file upload for a chapter with custom title and order
+ */
+export const addSingleChapter = async (req: AuthRequest, res: Response) => {
+  try {
+    const { storyId, chapterTitle, orderNum } = req.body;
+    const file = req.file;
+
+    if (!file) {
+      return res.status(400).json({ success: false, error: "No chapter file uploaded" });
+    }
+
+    if (!storyId || !chapterTitle || !orderNum) {
+      if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
+      return res.status(400).json({ success: false, error: "storyId, chapterTitle, and orderNum are required" });
+    }
+
+    const content = fs.readFileSync(file.path, 'utf8');
+
+    const chapterData = {
+      storyId: parseInt(storyId),
+      orderNum: parseInt(orderNum),
+      title: chapterTitle,
+      content: content
+    };
+
+    const chapterId = await StoryService.addChapter(chapterData);
+
+    fs.unlinkSync(file.path);
+
+    res.status(201).json({
+      success: true,
+      data: {
+        chapterId,
+        storyId: chapterData.storyId,
+        title: chapterData.title,
+        orderNum: chapterData.orderNum
+      }
+    });
+  } catch (error: any) {
+    if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+/**
  * Handle multi-file upload for chapters
  * Logic extracted from your current service file for better separation
  */

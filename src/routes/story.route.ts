@@ -41,6 +41,19 @@ router.post(
 router.get('/', StoryController.getAllStories);
 
 /**
+ * @route   POST /api/stories/chapters
+ * @desc    Upload a single .txt/.md file as a chapter with metadata
+ * @access  Private (Author/Admin)
+ */
+router.post(
+  '/upload-chapter',
+  authenticateToken,
+  authorize(['author', 'admin']),
+  chapterUpload.single('chapterFile'),
+  StoryController.addSingleChapter
+);
+
+/**
  * @route   POST /api/stories/upload-chapters
  * @desc    Upload multiple .txt/.md files as chapters
  * @access  Private (Author/Admin)
