@@ -33,7 +33,7 @@ const posterStorage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, posterDir),
     filename: (req, file, cb) => {
         const storyName = req.body.title 
-            ? req.body.title.trim().toLowerCase().replace(/\s+/g, '_') 
+            ? slugify(req.body.title) 
             : 'story';
 
         const files = fs.readdirSync(posterDir);
@@ -74,3 +74,14 @@ export const posterUpload = multer({
     fileFilter: posterFilter,
     limits: { fileSize: 5 * 1024 * 1024 }
 });
+
+const slugify = (text: string): string => {
+    return text
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .replace(/[đĐ]/g, 'd')
+        .replace(/([^a-z0-0\s_-])+/g, '')
+        .replace(/[\s_-]+/g, '_')
+        .trim();
+};
