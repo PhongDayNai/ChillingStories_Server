@@ -215,4 +215,22 @@ router.get('/personalized/author/:userId', authenticateToken, StoryController.ge
  */
 router.get('/me/favorites', authenticateToken, StoryController.getMyFavorites);
 
+/**
+ * @route   GET /api/stories/me/progress
+ * @desc    Get all reading progress/history for the current user
+ * @access  Private (Authenticated)
+ */
+router.get('/me/progress', authenticateToken, StoryController.getUserReadingHistory);
+
+/**
+ * @route   DELETE /api/stories/me/progress/:storyId
+ * @desc    Remove a specific story from the user's reading history
+ * @access  Private (Authenticated)
+ */
+router.delete(
+  '/me/progress/:storyId', 
+  authenticateToken, 
+  StoryController.removeFromHistory
+);
+
 export default router;

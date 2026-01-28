@@ -450,3 +450,32 @@ export const getFavoritedStories = async (userId: number): Promise<any[]> => {
   const [rows] = await pool.execute<RowDataPacket[]>(sql, [userId]);
   return rows;
 };
+
+export const getAllReadingProgress = async (userId: number): Promise<any[]> => {
+  const sql = `
+    SELECT 
+      rp.story_id as storyId,
+      s.title as storyTitle,
+      s.cover_image_path as coverImagePath,
+      u.username as authorName,
+      rp.last_chapter_id as lastChapterId,
+      c.title as lastChapterTitle,
+      c.order_num as lastChapterOrder,
+      rp.updated_at as lastReadAt,
+      (SELECT COUNT(*) FROM chapters WHERE story_id = s.id) as totalChapters
+    FROM reading_progress rp
+    JOIN stories s ON rp.story_id = s.id
+    LEFT JOIN users u ON s.author_id = u.id
+    JOIN chapters c ON rp.last_chapter_id = c.id
+    WHERE rp.user_id = ?
+    ORDER BY rp.updated_at DESC`;
+    
+  const [rows] = await pool.execute<RowDataPacket[]>(sql, [userId]);
+  return rows;
+};
+
+export const deleteReadingProgress = async (userId: number, storyId: number): Promise<boolean> => {
+  const sql = `DELETE FROM reading_progress WHERE user_id = ? AND story_id = ?`;
+  const [result] = await pool.execute<ResultSetHeader>(sql, [userId, storyId]);
+  return result.affectedRows > 0;
+};

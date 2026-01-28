@@ -600,3 +600,53 @@ export const getMyFavorites = async (req: AuthRequest, res: Response) => {
     return res.status(500).json({ success: false, error: error.message });
   }
 };
+
+export const getUserReadingHistory = async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    
+    if (!userId) {
+      return res.status(401).json({ success: false, error: "Unauthorized" });
+    }
+
+    const progressList = await StoryService.getAllReadingProgress(userId);
+    
+    const formattedProgress = progressList.map(item => ({
+      ...item,
+      totalChapters: Number(item.totalChapters),
+      coverLink: item.coverImagePath 
+        ? `${req.protocol}://${req.get('host')}/assets/images/poster/stories/${item.coverImagePath}` 
+        : null
+    }));
+
+    return res.status(200).json({ 
+      success: true, 
+      data: formattedProgress 
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+export const removeFromHistory = async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    const storyId = parseInt(req.params.storyId);
+
+    if (!userId) return res.status(401).json({ success: false, error: "Unauthorized" });
+    if (isNaN(storyId)) return res.status(400).json({ success: false, error: "Invalid Story ID" });
+
+    const deleted = await StoryService.deleteReadingProgress(userId, storyId);
+
+    if (!deleted) {
+      return res.status(404).json({ success: false, message: "Progress record not found" });
+    }
+
+    res.status(200).json({ 
+      success: true, 
+      message: "Story removed from reading history" 
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
