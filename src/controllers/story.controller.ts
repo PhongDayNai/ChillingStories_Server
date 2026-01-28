@@ -444,3 +444,99 @@ export const getStoriesByUser = async (req: AuthRequest, res: Response) => {
     return res.status(500).json({ success: false, error: error.message });
   }
 };
+
+/**
+ * Get top 30 newest stories with personal favorite status
+ */
+export const getNewestForUser = async (req: AuthRequest, res: Response) => {
+  try {
+    const currentUserId = req.user?.id;
+    const stories = await StoryService.getNewestStoriesForUser(currentUserId);
+    
+    const formattedStories = stories.map(story => ({
+      ...story,
+      chapterCount: Number(story.chapterCount),
+      isFavorited: !!story.isFavorited, // Convert 1/0 to true/false
+      coverLink: story.coverImagePath 
+        ? `${req.protocol}://${req.get('host')}/assets/images/poster/stories/${story.coverImagePath}` 
+        : null
+    }));
+
+    return res.status(200).json({ success: true, data: formattedStories });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+/**
+ * Get top 30 viewed stories with personal favorite status
+ */
+export const getTopViewedForUser = async (req: AuthRequest, res: Response) => {
+  try {
+    const currentUserId = req.user?.id;
+    const stories = await StoryService.getTopStoriesByViewForUser(currentUserId);
+    
+    const formattedStories = stories.map(story => ({
+      ...story,
+      chapterCount: Number(story.chapterCount),
+      isFavorited: !!story.isFavorited,
+      coverLink: story.coverImagePath 
+        ? `${req.protocol}://${req.get('host')}/assets/images/poster/stories/${story.coverImagePath}` 
+        : null
+    }));
+
+    return res.status(200).json({ success: true, data: formattedStories });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+/**
+ * Get top 30 favorited stories with personal favorite status
+ */
+export const getTopFavoritedForUser = async (req: AuthRequest, res: Response) => {
+  try {
+    const currentUserId = req.user?.id;
+    const stories = await StoryService.getTopStoriesByFavoriteForUser(currentUserId);
+    
+    const formattedStories = stories.map(story => ({
+      ...story,
+      chapterCount: Number(story.chapterCount),
+      isFavorited: !!story.isFavorited,
+      coverLink: story.coverImagePath 
+        ? `${req.protocol}://${req.get('host')}/assets/images/poster/stories/${story.coverImagePath}` 
+        : null
+    }));
+
+    return res.status(200).json({ success: true, data: formattedStories });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+/**
+ * Get stories by author with personal favorite status
+ */
+export const getStoriesByAuthorForUser = async (req: AuthRequest, res: Response) => {
+  try {
+    const authorId = parseInt(req.params.userId);
+    const currentUserId = req.user?.id;
+
+    if (isNaN(authorId)) return res.status(400).json({ success: false, error: "Invalid Author ID" });
+
+    const stories = await StoryService.getStoriesByAuthorForUser(authorId, currentUserId);
+    
+    const formattedStories = stories.map(story => ({
+      ...story,
+      chapterCount: Number(story.chapterCount),
+      isFavorited: !!story.isFavorited,
+      coverLink: story.coverImagePath 
+        ? `${req.protocol}://${req.get('host')}/assets/images/poster/stories/${story.coverImagePath}` 
+        : null
+    }));
+
+    return res.status(200).json({ success: true, data: formattedStories });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+};

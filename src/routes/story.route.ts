@@ -167,4 +167,32 @@ router.get('/top/favorites', StoryController.getTopFavorited);
  */
 router.get('/user/:userId', StoryController.getStoriesByUser);
 
+/**
+ * @route   GET /api/stories/personalized/new
+ * @desc    Get top 30 newest stories with personal favorite status
+ * @access  Private (Authenticated)
+ */
+router.get('/personalized/new', authenticateToken, StoryController.getNewestForUser);
+
+/**
+ * @route   GET /api/stories/personalized/views
+ * @desc    Get top 30 viewed stories with personal favorite status
+ * @access  Private (Authenticated)
+ */
+router.get('/personalized/views', authenticateToken, StoryController.getTopViewedForUser);
+
+/**
+ * @route   GET /api/stories/personalized/favorites
+ * @desc    Get top 30 favorited stories with personal favorite status
+ * @access  Private (Authenticated)
+ */
+router.get('/personalized/favorites', authenticateToken, StoryController.getTopFavoritedForUser);
+
+/**
+ * @route   GET /api/stories/personalized/author/:userId
+ * @desc    Get author stories with personal favorite status
+ * @access  Private (Authenticated)
+ */
+router.get('/personalized/author/:userId', authenticateToken, StoryController.getStoriesByAuthorForUser);
+
 export default router;
