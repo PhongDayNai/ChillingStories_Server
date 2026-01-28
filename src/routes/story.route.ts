@@ -160,4 +160,11 @@ router.get('/top/views', StoryController.getTopViewed);
  */
 router.get('/top/favorites', StoryController.getTopFavorited);
 
+/**
+ * @route   GET /api/stories/user/:userId
+ * @desc    Get all stories authored by a specific user
+ * @access  Public
+ */
+router.get('/user/:userId', StoryController.getStoriesByUser);
+
 export default router;

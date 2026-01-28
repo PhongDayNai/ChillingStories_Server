@@ -417,3 +417,30 @@ export const getTopFavorited = async (req: AuthRequest, res: Response) => {
     return res.status(500).json({ success: false, error: error.message });
   }
 };
+
+/**
+ * Get stories for a specific user (Author Profile / My Stories)
+ */
+export const getStoriesByUser = async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = parseInt(req.params.userId);
+    
+    if (isNaN(userId)) {
+      return res.status(400).json({ success: false, error: "Invalid User ID" });
+    }
+
+    const stories = await StoryService.getStoriesByAuthor(userId);
+    
+    const formattedStories = stories.map(story => ({
+      ...story,
+      chapterCount: Number(story.chapterCount),
+      coverLink: story.coverImagePath 
+        ? `${req.protocol}://${req.get('host')}/assets/images/poster/stories/${story.coverImagePath}` 
+        : null
+    }));
+
+    return res.status(200).json({ success: true, data: formattedStories });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+};

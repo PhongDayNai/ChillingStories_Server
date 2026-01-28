@@ -314,3 +314,18 @@ export const getTopStoriesByFavorite = async (): Promise<any[]> => {
   const [rows] = await pool.execute<RowDataPacket[]>(sql);
   return rows;
 };
+
+export const getStoriesByAuthor = async (userId: number): Promise<any[]> => {
+  const sql = `
+    SELECT 
+      s.id, s.title, s.description, s.cover_image_path as coverImagePath, 
+      s.status, s.view_count as viewCount, s.favorite_count as favoriteCount, 
+      s.created_at as createdAt,
+      (SELECT COUNT(*) FROM chapters WHERE story_id = s.id) as chapterCount
+    FROM stories s
+    WHERE s.author_id = ?
+    ORDER BY s.created_at DESC`;
+    
+  const [rows] = await pool.execute<RowDataPacket[]>(sql, [userId]);
+  return rows;
+};
