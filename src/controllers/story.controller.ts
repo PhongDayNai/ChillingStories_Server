@@ -261,6 +261,41 @@ export const getChapterByNumber = async (req: AuthRequest, res: Response) => {
   }
 };
 
+export const getChapterContentForUser = async (req: AuthRequest, res: Response) => {
+  try {
+    const chapterId = parseInt(req.params.chapterId);
+    const userId = req.user?.id;
+
+    if (isNaN(chapterId)) return res.status(400).json({ success: false, error: "Invalid ID" });
+
+    const chapter = await StoryService.getChapterByIdWithProgress(chapterId, userId);
+
+    if (!chapter) return res.status(404).json({ success: false, error: "Not found" });
+
+    res.status(200).json({ success: true, data: chapter });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+export const getChapterByNumberForUser = async (req: AuthRequest, res: Response) => {
+  try {
+    const storyId = parseInt(req.params.storyId);
+    const orderNum = parseInt(req.params.orderNum);
+    const userId = req.user?.id;
+
+    if (isNaN(storyId) || isNaN(orderNum)) return res.status(400).json({ success: false, error: "Invalid Params" });
+
+    const chapter = await StoryService.getChapterByOrderWithProgress(storyId, orderNum, userId);
+
+    if (!chapter) return res.status(404).json({ success: false, error: "Not found" });
+
+    res.status(200).json({ success: true, data: chapter });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
 export const addView = async (req: AuthRequest, res: Response) => {
   try {
     const storyId = parseInt(req.params.storyId);

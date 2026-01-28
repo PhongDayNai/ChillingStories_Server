@@ -218,6 +218,35 @@ export const getChapterByOrder = async (storyId: number, orderNum: number): Prom
   return rows.length > 0 ? (rows[0] as IChapter) : null;
 };
 
+export const updateReadingProgress = async (userId: number, storyId: number, chapterId: number): Promise<void> => {
+  const sql = `
+    INSERT INTO reading_progress (user_id, story_id, last_chapter_id) 
+    VALUES (?, ?, ?) 
+    ON DUPLICATE KEY UPDATE last_chapter_id = VALUES(last_chapter_id)`;
+    
+  await pool.execute(sql, [userId, storyId, chapterId]);
+};
+
+export const getChapterByIdWithProgress = async (chapterId: number, userId?: number): Promise<IChapter | null> => {
+  const chapter = await getChapterById(chapterId);
+  
+  if (chapter && userId) {
+    await updateReadingProgress(userId, chapter.storyId, chapter.id);
+  }
+  
+  return chapter;
+};
+
+export const getChapterByOrderWithProgress = async (storyId: number, orderNum: number, userId?: number): Promise<IChapter | null> => {
+  const chapter = await getChapterByOrder(storyId, orderNum);
+  
+  if (chapter && userId) {
+    await updateReadingProgress(userId, storyId, chapter.id);
+  }
+  
+  return chapter;
+};
+
 export const updateChapterTitle = async (chapterId: number, newTitle: string): Promise<boolean> => {
   const sql = `UPDATE chapters SET title = ? WHERE id = ?`;
   const [result] = await pool.execute<ResultSetHeader>(sql, [newTitle, chapterId]);

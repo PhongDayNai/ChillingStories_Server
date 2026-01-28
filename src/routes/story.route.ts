@@ -1,4 +1,3 @@
-// src/routes/story.route.ts
 import { Router } from 'express';
 import * as StoryController from '../controllers/story.controller';
 import { authenticateToken } from '../middlewares/auth.middleware';
@@ -93,6 +92,20 @@ router.get('/chapters/:chapterId', StoryController.getChapterContent);
  * @access  Public
  */
 router.get('/:storyId/chapters/:orderNum', StoryController.getChapterByNumber);
+
+/**
+ * @route   GET /api/stories/chapters/:chapterId
+ * @desc    Get full content of a specific chapter
+ * @access  Public
+ */
+router.get('/personalized/chapters/:chapterId', StoryController.getChapterContentForUser);
+
+/**
+ * @route   GET /api/stories/:storyId/chapters/:orderNum
+ * @desc    Get chapter content by story ID and chapter number
+ * @access  Public
+ */
+router.get('/personalized/:storyId/chapters/:orderNum', StoryController.getChapterByNumberForUser);
 
 /**
  * @route   PATCH /api/stories/:storyId/view
