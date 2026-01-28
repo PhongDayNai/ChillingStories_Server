@@ -173,17 +173,13 @@ export const toggleFavorite = async (userId: number, storyId: number): Promise<{
 export const getStoryById = async (storyId: number): Promise<any | null> => {
   const sql = `
     SELECT 
-      s.id, 
-      s.title, 
-      s.description, 
-      s.cover_image_path as coverImagePath, 
-      s.author_id as authorId, 
-      s.status, 
-      s.view_count as viewCount, 
-      s.favorite_count as favoriteCount, 
+      s.id, s.title, s.description, s.cover_image_path as coverImagePath, 
+      s.author_id as authorId, u.username as authorName, 
+      s.status, s.view_count as viewCount, s.favorite_count as favoriteCount, 
       s.created_at as createdAt,
       (SELECT COUNT(*) FROM chapters WHERE story_id = s.id) as chapterCount
     FROM stories s
+    LEFT JOIN users u ON s.author_id = u.id
     WHERE s.id = ?`;
     
   const [rows] = await pool.execute<RowDataPacket[]>(sql, [storyId]);
@@ -273,10 +269,12 @@ export const getNewestStories = async (): Promise<any[]> => {
   const sql = `
     SELECT 
       s.id, s.title, s.description, s.cover_image_path as coverImagePath, 
-      s.author_id as authorId, s.status, s.view_count as viewCount, 
-      s.favorite_count as favoriteCount, s.created_at as createdAt,
+      s.author_id as authorId, u.username as authorName,
+      s.status, s.view_count as viewCount, s.favorite_count as favoriteCount, 
+      s.created_at as createdAt,
       (SELECT COUNT(*) FROM chapters WHERE story_id = s.id) as chapterCount
     FROM stories s
+    LEFT JOIN users u ON s.author_id = u.id
     ORDER BY s.created_at DESC 
     LIMIT 30`;
     
@@ -288,10 +286,12 @@ export const getTopStoriesByView = async (): Promise<any[]> => {
   const sql = `
     SELECT 
       s.id, s.title, s.description, s.cover_image_path as coverImagePath, 
-      s.author_id as authorId, s.status, s.view_count as viewCount, 
-      s.favorite_count as favoriteCount, s.created_at as createdAt,
+      s.author_id as authorId, u.username as authorName,
+      s.status, s.view_count as viewCount, s.favorite_count as favoriteCount, 
+      s.created_at as createdAt,
       (SELECT COUNT(*) FROM chapters WHERE story_id = s.id) as chapterCount
     FROM stories s
+    LEFT JOIN users u ON s.author_id = u.id
     ORDER BY s.view_count DESC 
     LIMIT 30`;
     
@@ -299,15 +299,16 @@ export const getTopStoriesByView = async (): Promise<any[]> => {
   return rows;
 };
 
-
 export const getTopStoriesByFavorite = async (): Promise<any[]> => {
   const sql = `
     SELECT 
       s.id, s.title, s.description, s.cover_image_path as coverImagePath, 
-      s.author_id as authorId, s.status, s.view_count as viewCount, 
-      s.favorite_count as favoriteCount, s.created_at as createdAt,
+      s.author_id as authorId, u.username as authorName,
+      s.status, s.view_count as viewCount, s.favorite_count as favoriteCount, 
+      s.created_at as createdAt,
       (SELECT COUNT(*) FROM chapters WHERE story_id = s.id) as chapterCount
     FROM stories s
+    LEFT JOIN users u ON s.author_id = u.id
     ORDER BY s.favorite_count DESC 
     LIMIT 30`;
     

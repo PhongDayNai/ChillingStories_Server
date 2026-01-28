@@ -6,10 +6,12 @@ export interface IStory {
   description?: string;
   coverImagePath?: string;
   authorId?: number;
+  authorName?: string;
   status: StoryStatus;
   viewCount: number;
   favoriteCount: number;
   createdAt: Date;
+  chapterCount?: number;
 }
 
 export interface IChapter {
