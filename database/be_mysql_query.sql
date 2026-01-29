@@ -52,6 +52,7 @@ CREATE TABLE reading_progress (
     user_id INT NOT NULL,
     story_id INT NOT NULL,
     last_chapter_id INT,
+    last_order_num INT,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (user_id, story_id),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,

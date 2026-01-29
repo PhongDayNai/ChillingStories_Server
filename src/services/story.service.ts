@@ -218,20 +218,27 @@ export const getChapterByOrder = async (storyId: number, orderNum: number): Prom
   return rows.length > 0 ? (rows[0] as IChapter) : null;
 };
 
-export const updateReadingProgress = async (userId: number, storyId: number, chapterId: number): Promise<void> => {
+export const updateReadingProgress = async (
+  userId: number, 
+  storyId: number, 
+  chapterId: number, 
+  orderNum: number
+): Promise<void> => {
   const sql = `
-    INSERT INTO reading_progress (user_id, story_id, last_chapter_id) 
-    VALUES (?, ?, ?) 
-    ON DUPLICATE KEY UPDATE last_chapter_id = VALUES(last_chapter_id)`;
+    INSERT INTO reading_progress (user_id, story_id, last_chapter_id, last_order_num) 
+    VALUES (?, ?, ?, ?) 
+    ON DUPLICATE KEY UPDATE 
+      last_chapter_id = VALUES(last_chapter_id),
+      last_order_num = VALUES(last_order_num)`;
     
-  await pool.execute(sql, [userId, storyId, chapterId]);
+  await pool.execute(sql, [userId, storyId, chapterId, orderNum]);
 };
 
 export const getChapterByIdWithProgress = async (chapterId: number, userId?: number): Promise<IChapter | null> => {
   const chapter = await getChapterById(chapterId);
   
   if (chapter && userId) {
-    await updateReadingProgress(userId, chapter.storyId, chapter.id);
+    await updateReadingProgress(userId, chapter.storyId, chapter.id, chapter.orderNum);
   }
   
   return chapter;
@@ -241,7 +248,7 @@ export const getChapterByOrderWithProgress = async (storyId: number, orderNum: n
   const chapter = await getChapterByOrder(storyId, orderNum);
   
   if (chapter && userId) {
-    await updateReadingProgress(userId, storyId, chapter.id);
+    await updateReadingProgress(userId, storyId, chapter.id, chapter.orderNum);
   }
   
   return chapter;
@@ -459,8 +466,8 @@ export const getAllReadingProgress = async (userId: number): Promise<any[]> => {
       s.cover_image_path as coverImagePath,
       u.username as authorName,
       rp.last_chapter_id as lastChapterId,
+      rp.last_order_num as lastChapterOrder,
       c.title as lastChapterTitle,
-      c.order_num as lastChapterOrder,
       rp.updated_at as lastReadAt,
       (SELECT COUNT(*) FROM chapters WHERE story_id = s.id) as totalChapters
     FROM reading_progress rp
