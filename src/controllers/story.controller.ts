@@ -1,5 +1,6 @@
 import { Response } from 'express';
 import fs from 'fs';
+import path from 'path';
 import { AuthRequest } from '../models/user.model';
 import { ICreateStoryRequest } from '../models/story.model';
 import * as StoryService from '../services/story.service';
@@ -646,6 +647,52 @@ export const removeFromHistory = async (req: AuthRequest, res: Response) => {
       success: true, 
       message: "Story removed from reading history" 
     });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+export const removeStory = async (req: AuthRequest, res: Response) => {
+  try {
+    const storyId = parseInt(req.params.storyId);
+    
+    const story = await StoryService.getStoryById(storyId);
+    if (!story) return res.status(404).json({ success: false, error: "Story not found" });
+
+    await StoryService.deleteStory(storyId);
+
+    if (story.coverImagePath) {
+      const filePath = path.join(__dirname, '../../assets/images/poster/stories', story.coverImagePath);
+      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+    }
+
+    res.status(200).json({ success: true, message: "Story and associated files deleted" });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+export const removeChapterById = async (req: AuthRequest, res: Response) => {
+  try {
+    const chapterId = parseInt(req.params.chapterId);
+    const deleted = await StoryService.deleteChapterById(chapterId);
+    
+    if (!deleted) return res.status(404).json({ success: false, error: "Chapter not found" });
+    res.status(200).json({ success: true, message: "Chapter deleted" });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+export const removeChapterByOrder = async (req: AuthRequest, res: Response) => {
+  try {
+    const storyId = parseInt(req.params.storyId);
+    const orderNum = parseInt(req.params.orderNum);
+    
+    const deleted = await StoryService.deleteChapterByOrder(storyId, orderNum);
+    
+    if (!deleted) return res.status(404).json({ success: false, error: "Chapter not found" });
+    res.status(200).json({ success: true, message: "Chapter deleted" });
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
   }

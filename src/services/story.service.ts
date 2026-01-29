@@ -486,3 +486,21 @@ export const deleteReadingProgress = async (userId: number, storyId: number): Pr
   const [result] = await pool.execute<ResultSetHeader>(sql, [userId, storyId]);
   return result.affectedRows > 0;
 };
+
+export const deleteStory = async (storyId: number): Promise<boolean> => {
+  const sql = `DELETE FROM stories WHERE id = ?`;
+  const [result] = await pool.execute<ResultSetHeader>(sql, [storyId]);
+  return result.affectedRows > 0;
+};
+
+export const deleteChapterById = async (chapterId: number): Promise<boolean> => {
+  const sql = `DELETE FROM chapters WHERE id = ?`;
+  const [result] = await pool.execute<ResultSetHeader>(sql, [chapterId]);
+  return result.affectedRows > 0;
+};
+
+export const deleteChapterByOrder = async (storyId: number, orderNum: number): Promise<boolean> => {
+  const sql = `DELETE FROM chapters WHERE story_id = ? AND order_num = ?`;
+  const [result] = await pool.execute<ResultSetHeader>(sql, [storyId, orderNum]);
+  return result.affectedRows > 0;
+};

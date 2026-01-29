@@ -233,4 +233,22 @@ router.delete(
   StoryController.removeFromHistory
 );
 
+/**
+ * @route   DELETE /api/stories/:storyId
+ * @desc    Delete a story and its physical poster file
+ */
+router.delete('/:storyId', authenticateToken, authorize(['author', 'admin']), StoryController.removeStory);
+
+/**
+ * @route   DELETE /api/stories/chapters/:chapterId
+ * @desc    Delete a chapter by ID
+ */
+router.delete('/chapters/:chapterId', authenticateToken, authorize(['author', 'admin']), StoryController.removeChapterById);
+
+/**
+ * @route   DELETE /api/stories/:storyId/chapters/:orderNum
+ * @desc    Delete a chapter by story ID and order number
+ */
+router.delete('/:storyId/chapters/:orderNum', authenticateToken, authorize(['author', 'admin']), StoryController.removeChapterByOrder);
+
 export default router;
