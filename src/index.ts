@@ -24,9 +24,9 @@ app.use(express.json());
 app.use('/assets', express.static(path.join(__dirname, '../assets')));
 
 // Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/stories', storyRoutes);
+app.use('/v1/auth', authRoutes);
+app.use('/v1/users', userRoutes);
+app.use('/v1/stories', storyRoutes);
 
 app.get('/', (req, res) => {
     res.send('Chilling Stories SQL API is running 🚀');
