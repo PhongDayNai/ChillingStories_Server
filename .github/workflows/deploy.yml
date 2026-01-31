@@ -22,7 +22,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ secrets.DOCKER_HUB_USERNAME}/chilling-stories:latest 
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/chilling-stories:latest 
 
   deploy:
     needs: build-and-push
