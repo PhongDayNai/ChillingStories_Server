@@ -29,7 +29,7 @@ services:
       DB_NAME: chilling_stories_db
       PORT: 8000
     volumes:
-    - .:/app
+      - .:/app
       - /app/node_modules
       - ~/story-data/assets/posters:/app/assets/images/poster/stories
       - ~/story-data/assets/images/users/avatars:/app/assets/images/users/avatars
