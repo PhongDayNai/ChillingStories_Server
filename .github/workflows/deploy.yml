@@ -26,6 +26,11 @@ jobs:
     needs: build-and-push
     runs-on: ubuntu-latest
     steps:
+      - name: Install Cloudflared
+        run: |
+          curl -L --output cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
+          sudo dpkg -i cloudflared.deb
+
       - name: Deploy to Server via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -33,14 +38,13 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
+          proxy_command: cloudflared access ssh --hostname ${{ secrets.SSH_HOST }}
           script: |
             cd ~/ChillingStories_Server || git clone https://github.com/PhongDayNai/ChillingStories_Server.git ~/ChillingStories_Server
             cd ~/ChillingStories_Server
             
             git pull origin main
-            
             export DB_PASSWORD=${{ secrets.DB_PASSWORD }}
             
             docker-compose up -d --build
-            
             docker image prune -f
