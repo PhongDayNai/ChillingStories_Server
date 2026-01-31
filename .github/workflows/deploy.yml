@@ -1,4 +1,30 @@
-deploy:
+name: CI/CD Chilling Stories App
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/chilling-stories:latest 
+
+  deploy:
     needs: build-and-push
     runs-on: ubuntu-latest
     steps:
@@ -7,11 +33,11 @@ deploy:
           curl -L --output cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
           sudo dpkg -i cloudflared.deb
 
-      - name: Configure SSH for Cloudflare Tunnel
+      - name: Configure SSH with Service Token
         run: |
           mkdir -p ~/.ssh
           echo "Host ${{ secrets.SSH_HOST }}
-            ProxyCommand /usr/bin/cloudflared access ssh --hostname %h" > ~/.ssh/config
+            ProxyCommand /usr/bin/cloudflared access ssh --hostname %h --service-token-id ${{ secrets.CF_CLIENT_ID }} --service-token-secret ${{ secrets.CF_CLIENT_SECRET }}" > ~/.ssh/config
           chmod 600 ~/.ssh/config
 
       - name: Deploy to Server via SSH
@@ -21,10 +47,20 @@ deploy:
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
+          script_stop: true
           script: |
+            # Truy cập vào thư mục dự án (tự động clone nếu chưa có)
             cd ~/ChillingStories_Server || git clone https://github.com/PhongDayNai/ChillingStories_Server.git ~/ChillingStories_Server
             cd ~/ChillingStories_Server
+            
+            # Cập nhật code mới nhất từ GitHub
             git pull origin main
+            
+            # Truyền biến mật khẩu Database vào môi trường
             export DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+            
+            # Khởi động lại hệ thống App và Database trên ổ Samsung 970 EVO
             docker-compose up -d --build
+            
+            # Dọn dẹp Image cũ để tối ưu tài nguyên server
             docker image prune -f
