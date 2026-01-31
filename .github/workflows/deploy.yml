@@ -22,7 +22,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/chilling-stories:latest 
+          tags: ${{ secrets.DOCKER_HUB_USERNAME}/chilling-stories:latest 
 
   deploy:
     needs: build-and-push
@@ -33,7 +33,7 @@ jobs:
           curl -L --output cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
           sudo dpkg -i cloudflared.deb
 
-      - name: Deploy via Native SSH
+      - name: Configure SSH with Service Token
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
@@ -48,15 +48,19 @@ jobs:
               StrictHostKeyChecking no
           EOF
 
+      - name: Deploy via Native SSH
+        run: |
           ssh server_i5 << 'EOF'
             cd ~/ChillingStories_Server || git clone https://github.com/PhongDayNai/ChillingStories_Server.git ~/ChillingStories_Server
             cd ~/ChillingStories_Server
             
             git pull origin main
-            
             export DB_PASSWORD=${{ secrets.DB_PASSWORD }}
             
-            docker-compose up -d --build
+            docker compose down || true
+            docker rm -f chilling-db story-server || true
+            
+            docker compose up -d --build
             
             docker image prune -f
           EOF
