@@ -19,19 +19,38 @@ export const register = async (req: Request, res: Response) => {
 export const login = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
+    
     const result = await AuthService.loginUser(email, password);
 
     if (!result) {
-      return res.status(401).json({ success: false, error: "Invalid email or password" });
+      return res.status(401).json({ 
+        success: false, 
+        error: "Invalid email or password" 
+      });
     }
 
     res.status(200).json({
       success: true,
       message: "Login successful",
-      ...result
+      token: result.token,
+      user: {
+        id: result.user.id,
+        username: result.user.username,
+        email: result.user.email,
+        phone: result.user.phone || null,
+        role: result.user.role,
+        avatarUrl: result.user.avatarUrl 
+          ? `${req.protocol}://${req.get('host')}${result.user.avatarUrl}` 
+          : null,
+        createdAt: result.user.createdAt
+      }
     });
   } catch (error: any) {
-    res.status(500).json({ success: false, error: "Internal server error" });
+    console.error("Login Error:", error.message);
+    res.status(500).json({ 
+      success: false, 
+      error: "Internal server error" 
+    });
   }
 };
 

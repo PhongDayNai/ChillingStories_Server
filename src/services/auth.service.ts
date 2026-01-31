@@ -9,7 +9,6 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your_secret';
 export const registerUser = async (userData: IRegisterRequest) => {
   const hashedPassword = await bcrypt.hash(userData.password, 10);
   
-  // Maps to your 'users' table columns 
   const sql = `INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, ?)`;
   const values = [userData.username, userData.email, hashedPassword, userData.role || 'viewer'];
 
@@ -18,7 +17,7 @@ export const registerUser = async (userData: IRegisterRequest) => {
 };
 
 export const loginUser = async (email: string, pass: string) => {
-  const sql = `SELECT id, username, email, password_hash as passwordHash, role FROM users WHERE email = ?`;
+  const sql = `SELECT id, username, email, phone, password_hash as passwordHash, role, avatar_url as avatarUrl, created_at as createdAt FROM users WHERE email = ?`;
   const [rows] = await pool.execute<RowDataPacket[]>(sql, [email]);
   
   const user = rows[0];
@@ -33,5 +32,16 @@ export const loginUser = async (email: string, pass: string) => {
     { expiresIn: '24h' }
   );
 
-  return { token, user: { id: user.id, username: user.username, role: user.role } };
+  return { 
+    token, 
+    user: { 
+      id: user.id, 
+      username: user.username, 
+      email: user.email, 
+      phone: user.phone, 
+      role: user.role,
+      avatarUrl: user.avatarUrl,
+      createdAt: user.createdAt
+    } 
+  };
 };
