@@ -33,34 +33,30 @@ jobs:
           curl -L --output cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
           sudo dpkg -i cloudflared.deb
 
-      - name: Configure SSH with Service Token
+      - name: Deploy via Native SSH
         run: |
           mkdir -p ~/.ssh
-          echo "Host ${{ secrets.SSH_HOST }}
-            ProxyCommand /usr/bin/cloudflared access ssh --hostname %h --service-token-id ${{ secrets.CF_CLIENT_ID }} --service-token-secret ${{ secrets.CF_CLIENT_SECRET }}" > ~/.ssh/config
-          chmod 600 ~/.ssh/config
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          
+          cat <<EOF > ~/.ssh/config
+          Host server_i5
+              HostName ${{ secrets.SSH_HOST }}
+              User ${{ secrets.SSH_USERNAME }}
+              IdentityFile ~/.ssh/id_ed25519
+              ProxyCommand cloudflared access ssh --hostname %h --service-token-id ${{ secrets.CF_CLIENT_ID }} --service-token-secret ${{ secrets.CF_CLIENT_SECRET }}
+              StrictHostKeyChecking no
+          EOF
 
-      - name: Deploy to Server via SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: 22
-          script_stop: true
-          script: |
-            # Truy cập vào thư mục dự án (tự động clone nếu chưa có)
+          ssh server_i5 << 'EOF'
             cd ~/ChillingStories_Server || git clone https://github.com/PhongDayNai/ChillingStories_Server.git ~/ChillingStories_Server
             cd ~/ChillingStories_Server
             
-            # Cập nhật code mới nhất từ GitHub
             git pull origin main
             
-            # Truyền biến mật khẩu Database vào môi trường
             export DB_PASSWORD=${{ secrets.DB_PASSWORD }}
             
-            # Khởi động lại hệ thống App và Database trên ổ Samsung 970 EVO
             docker-compose up -d --build
             
-            # Dọn dẹp Image cũ để tối ưu tài nguyên server
             docker image prune -f
+          EOF
