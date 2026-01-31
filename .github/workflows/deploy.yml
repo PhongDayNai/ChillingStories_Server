@@ -44,7 +44,7 @@ jobs:
               HostName ${{ secrets.SSH_HOST }}
               User ${{ secrets.SSH_USERNAME }}
               IdentityFile ~/.ssh/id_ed25519
-              ProxyCommand cloudflared access ssh --hostname %h --service-token-id ${{ secrets.CF_CLIENT_ID }} --service-token-secret ${{ secrets.CF_CLIENT_SECRET }}
+              ProxyCommand /usr/bin/cloudflared access ssh --hostname %h --service-token-id ${{ secrets.CF_CLIENT_ID }} --service-token-secret ${{ secrets.CF_CLIENT_SECRET }}
               StrictHostKeyChecking no
           EOF
 
