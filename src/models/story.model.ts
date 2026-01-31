@@ -12,6 +12,7 @@ export interface IStory {
   favoriteCount: number;
   createdAt: Date;
   chapterCount?: number;
+  lastUpdateAt?: Date | null;
 }
 
 export interface IChapter {

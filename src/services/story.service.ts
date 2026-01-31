@@ -177,7 +177,8 @@ export const getStoryById = async (storyId: number): Promise<any | null> => {
       s.author_id as authorId, u.username as authorName, 
       s.status, s.view_count as viewCount, s.favorite_count as favoriteCount, 
       s.created_at as createdAt,
-      (SELECT COUNT(*) FROM chapters WHERE story_id = s.id) as chapterCount
+      (SELECT COUNT(*) FROM chapters WHERE story_id = s.id) as chapterCount,
+      (SELECT MAX(created_at) FROM chapters WHERE story_id = s.id) as lastUpdateAt
     FROM stories s
     LEFT JOIN users u ON s.author_id = u.id
     WHERE s.id = ?`;
@@ -308,7 +309,8 @@ export const getNewestStories = async (): Promise<any[]> => {
       s.author_id as authorId, u.username as authorName,
       s.status, s.view_count as viewCount, s.favorite_count as favoriteCount, 
       s.created_at as createdAt,
-      (SELECT COUNT(*) FROM chapters WHERE story_id = s.id) as chapterCount
+      (SELECT COUNT(*) FROM chapters WHERE story_id = s.id) as chapterCount,
+      (SELECT MAX(created_at) FROM chapters WHERE story_id = s.id) as lastUpdateAt
     FROM stories s
     LEFT JOIN users u ON s.author_id = u.id
     ORDER BY s.created_at DESC 
@@ -325,7 +327,8 @@ export const getTopStoriesByView = async (): Promise<any[]> => {
       s.author_id as authorId, u.username as authorName,
       s.status, s.view_count as viewCount, s.favorite_count as favoriteCount, 
       s.created_at as createdAt,
-      (SELECT COUNT(*) FROM chapters WHERE story_id = s.id) as chapterCount
+      (SELECT COUNT(*) FROM chapters WHERE story_id = s.id) as chapterCount,
+      (SELECT MAX(created_at) FROM chapters WHERE story_id = s.id) as lastUpdateAt
     FROM stories s
     LEFT JOIN users u ON s.author_id = u.id
     ORDER BY s.view_count DESC 
@@ -342,7 +345,8 @@ export const getTopStoriesByFavorite = async (): Promise<any[]> => {
       s.author_id as authorId, u.username as authorName,
       s.status, s.view_count as viewCount, s.favorite_count as favoriteCount, 
       s.created_at as createdAt,
-      (SELECT COUNT(*) FROM chapters WHERE story_id = s.id) as chapterCount
+      (SELECT COUNT(*) FROM chapters WHERE story_id = s.id) as chapterCount,
+      (SELECT MAX(created_at) FROM chapters WHERE story_id = s.id) as lastUpdateAt
     FROM stories s
     LEFT JOIN users u ON s.author_id = u.id
     ORDER BY s.favorite_count DESC 
@@ -358,7 +362,8 @@ export const getStoriesByAuthor = async (userId: number): Promise<any[]> => {
       s.id, s.title, s.description, s.cover_image_path as coverImagePath, 
       s.status, s.view_count as viewCount, s.favorite_count as favoriteCount, 
       s.created_at as createdAt,
-      (SELECT COUNT(*) FROM chapters WHERE story_id = s.id) as chapterCount
+      (SELECT COUNT(*) FROM chapters WHERE story_id = s.id) as chapterCount,
+      (SELECT MAX(created_at) FROM chapters WHERE story_id = s.id) as lastUpdateAt
     FROM stories s
     WHERE s.author_id = ?
     ORDER BY s.created_at DESC`;
@@ -375,6 +380,7 @@ export const getNewestStoriesForUser = async (currentUserId?: number): Promise<a
       s.status, s.view_count as viewCount, s.favorite_count as favoriteCount, 
       s.created_at as createdAt,
       (SELECT COUNT(*) FROM chapters WHERE story_id = s.id) as chapterCount,
+      (SELECT MAX(created_at) FROM chapters WHERE story_id = s.id) as lastUpdateAt,
       EXISTS(SELECT 1 FROM favorites WHERE user_id = ? AND story_id = s.id) as isFavorited
     FROM stories s
     LEFT JOIN users u ON s.author_id = u.id
@@ -393,6 +399,7 @@ export const getTopStoriesByViewForUser = async (currentUserId?: number): Promis
       s.status, s.view_count as viewCount, s.favorite_count as favoriteCount, 
       s.created_at as createdAt,
       (SELECT COUNT(*) FROM chapters WHERE story_id = s.id) as chapterCount,
+      (SELECT MAX(created_at) FROM chapters WHERE story_id = s.id) as lastUpdateAt,
       EXISTS(SELECT 1 FROM favorites WHERE user_id = ? AND story_id = s.id) as isFavorited
     FROM stories s
     LEFT JOIN users u ON s.author_id = u.id
@@ -411,6 +418,7 @@ export const getTopStoriesByFavoriteForUser = async (currentUserId?: number): Pr
       s.status, s.view_count as viewCount, s.favorite_count as favoriteCount, 
       s.created_at as createdAt,
       (SELECT COUNT(*) FROM chapters WHERE story_id = s.id) as chapterCount,
+      (SELECT MAX(created_at) FROM chapters WHERE story_id = s.id) as lastUpdateAt,
       EXISTS(SELECT 1 FROM favorites WHERE user_id = ? AND story_id = s.id) as isFavorited
     FROM stories s
     LEFT JOIN users u ON s.author_id = u.id
@@ -429,6 +437,7 @@ export const getStoriesByAuthorForUser = async (authorId: number, currentUserId?
       s.status, s.view_count as viewCount, s.favorite_count as favoriteCount, 
       s.created_at as createdAt,
       (SELECT COUNT(*) FROM chapters WHERE story_id = s.id) as chapterCount,
+      (SELECT MAX(created_at) FROM chapters WHERE story_id = s.id) as lastUpdateAt,
       EXISTS(SELECT 1 FROM favorites WHERE user_id = ? AND story_id = s.id) as isFavorited
     FROM stories s
     LEFT JOIN users u ON s.author_id = u.id
@@ -447,6 +456,7 @@ export const getFavoritedStories = async (userId: number): Promise<any[]> => {
       s.status, s.view_count as viewCount, s.favorite_count as favoriteCount, 
       s.created_at as createdAt,
       (SELECT COUNT(*) FROM chapters WHERE story_id = s.id) as chapterCount,
+      (SELECT MAX(created_at) FROM chapters WHERE story_id = s.id) as lastUpdateAt,
       1 as isFavorited
     FROM favorites f
     JOIN stories s ON f.story_id = s.id
@@ -469,7 +479,8 @@ export const getAllReadingProgress = async (userId: number): Promise<any[]> => {
       rp.last_order_num as lastChapterOrder,
       c.title as lastChapterTitle,
       rp.updated_at as lastReadAt,
-      (SELECT COUNT(*) FROM chapters WHERE story_id = s.id) as totalChapters
+      (SELECT COUNT(*) FROM chapters WHERE story_id = s.id) as totalChapters,
+      (SELECT MAX(created_at) FROM chapters WHERE story_id = s.id) as lastUpdateAt
     FROM reading_progress rp
     JOIN stories s ON rp.story_id = s.id
     LEFT JOIN users u ON s.author_id = u.id
