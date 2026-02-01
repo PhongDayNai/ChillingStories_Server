@@ -6,7 +6,9 @@ export interface IUser {
   id: number;
   username: string;
   email: string;
+  phone?: string | null;
   role: UserRole;
+  avatarUrl?: string | null;
   createdAt: Date;
 }
 

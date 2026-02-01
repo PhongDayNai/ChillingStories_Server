@@ -1,7 +1,8 @@
 import { Router } from 'express';
 import * as UserController from '../controllers/user.controller';
-import { authenticateToken } from '../middlewares/auth.middleware'; // Your JWT checker
-import { authorize } from '../middlewares/role.middleware'; // Your Role checker
+import { authenticateToken } from '../middlewares/auth.middleware';
+import { authorize } from '../middlewares/role.middleware';
+import { avatarUpload } from '../middlewares/upload.middleware';
 
 const router = Router();
 
@@ -17,7 +18,12 @@ router.get('/profile', authenticateToken, UserController.getProfile);
  * @desc    Update user profile details
  * @access  Private
  */
-router.put('/profile', authenticateToken, UserController.updateProfile);
+router.put(
+  '/profile', 
+  authenticateToken, 
+  avatarUpload.single('avatar_image'),
+  UserController.updateProfile
+);
 
 /**
  * @route   GET /api/users

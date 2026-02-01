@@ -2,14 +2,34 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 
+const avatarDir = path.join(__dirname, '../../assets/images/users/avatars');
 const tempUploadDir = path.join(__dirname, '../../assets/temp_uploads');
 const posterDir = path.join(__dirname, '../../assets/images/poster/stories');
 
-[tempUploadDir, posterDir].forEach(dir => {
+[avatarDir, tempUploadDir, posterDir].forEach(dir => {
     if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir, { recursive: true });
     }
 });
+
+const avatarStorage = multer.diskStorage({
+    destination: (req, file, cb) => cb(null, avatarDir),
+    filename: (req, file, cb) => {
+        const userId = (req as any).user?.id || 'guest';
+        const uniqueSuffix = Date.now();
+        const extension = path.extname(file.originalname).toLowerCase();
+        cb(null, `avatar_${userId}_${uniqueSuffix}${extension}`);
+    }
+});
+
+const avatarFilter = (req: any, file: Express.Multer.File, cb: any) => {
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (allowedTypes.includes(file.mimetype)) {
+        cb(null, true);
+    } else {
+        cb(new Error('Only JPG, PNG and WEBP are allowed for avatars'), false);
+    }
+};
 
 const chapterStorage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, tempUploadDir),
@@ -62,6 +82,12 @@ const posterFilter = (req: any, file: Express.Multer.File, cb: any) => {
         cb(new Error('Only JPG, PNG and WEBP are allowed for posters'), false);
     }
 };
+
+export const avatarUpload = multer({
+    storage: avatarStorage,
+    fileFilter: avatarFilter,
+    limits: { fileSize: 8 * 1024 * 1024 }
+});
 
 export const chapterUpload = multer({
     storage: chapterStorage,
