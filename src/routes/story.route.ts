@@ -80,25 +80,11 @@ router.get('/:storyId/chapters', StoryController.getStoryChapters);
 router.get('/:storyId/info', StoryController.getStoryInfo);
 
 /**
- * @route   GET /api/stories/chapters/:chapterId
- * @desc    Get full content of a specific chapter
- * @access  Public
- */
-router.get('/chapters/:chapterId', StoryController.getChapterContent);
-
-/**
  * @route   GET /api/stories/:storyId/chapters/:orderNum
  * @desc    Get chapter content by story ID and chapter number
  * @access  Public
  */
 router.get('/:storyId/chapters/:orderNum', StoryController.getChapterByNumber);
-
-/**
- * @route   GET /api/stories/personalized/chapters/:chapterId
- * @desc    Get full content of a specific chapter
- * @access  Public
- */
-router.get('/personalized/chapters/:chapterId', authenticateToken, StoryController.getChapterContentForUser);
 
 /**
  * @route   GET /api/stories/personalized/:storyId/chapters/:orderNum

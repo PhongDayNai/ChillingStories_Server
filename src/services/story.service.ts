@@ -187,22 +187,6 @@ export const getStoryById = async (storyId: number): Promise<any | null> => {
   return rows.length > 0 ? rows[0] : null;
 };
 
-export const getChapterById = async (chapterId: number): Promise<IChapter | null> => {
-  const sql = `
-    SELECT 
-      id, 
-      story_id as storyId, 
-      order_num as orderNum, 
-      title, 
-      content, 
-      created_at as createdAt 
-    FROM chapters 
-    WHERE id = ?`;
-    
-  const [rows] = await pool.execute<RowDataPacket[]>(sql, [chapterId]);
-  return rows.length > 0 ? (rows[0] as IChapter) : null;
-};
-
 export const getChapterByOrder = async (storyId: number, orderNum: number): Promise<IChapter | null> => {
   const sql = `
     SELECT 
@@ -216,6 +200,7 @@ export const getChapterByOrder = async (storyId: number, orderNum: number): Prom
     WHERE story_id = ? AND order_num = ?`;
     
   const [rows] = await pool.execute<RowDataPacket[]>(sql, [storyId, orderNum]);
+  incrementViewCount(storyId);
   return rows.length > 0 ? (rows[0] as IChapter) : null;
 };
 
@@ -235,21 +220,12 @@ export const updateReadingProgress = async (
   await pool.execute(sql, [userId, storyId, chapterId, orderNum]);
 };
 
-export const getChapterByIdWithProgress = async (chapterId: number, userId?: number): Promise<IChapter | null> => {
-  const chapter = await getChapterById(chapterId);
-  
-  if (chapter && userId) {
-    await updateReadingProgress(userId, chapter.storyId, chapter.id, chapter.orderNum);
-  }
-  
-  return chapter;
-};
-
 export const getChapterByOrderWithProgress = async (storyId: number, orderNum: number, userId?: number): Promise<IChapter | null> => {
   const chapter = await getChapterByOrder(storyId, orderNum);
   
   if (chapter && userId) {
     await updateReadingProgress(userId, storyId, chapter.id, chapter.orderNum);
+    incrementViewCount(storyId);
   }
   
   return chapter;
