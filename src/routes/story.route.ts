@@ -33,6 +33,19 @@ router.post(
 );
 
 /**
+ * @route   PATCH /api/stories/:storyId
+ * @desc    Update story metadata (title, description, poster)
+ * @access  Private (Author/Admin)
+ */
+router.patch(
+  '/:storyId',
+  authenticateToken,
+  authorize(['author', 'admin']),
+  posterUpload.single('poster'),
+  StoryController.updateStoryInfo
+);
+
+/**
  * @route   GET /api/stories
  * @desc    Search stories (Uses FULLTEXT index)
  * @access  Public

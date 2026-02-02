@@ -63,6 +63,35 @@ export const createStoryWithGenres = async (authorId: number, data: ICreateStory
   }
 };
 
+export const updateStory = async (
+  storyId: number, 
+  data: { title?: string; description?: string; cover_image_path?: string }
+): Promise<boolean> => {
+  const fields: string[] = [];
+  const params: any[] = [];
+
+  if (data.title) {
+    fields.push("title = ?");
+    params.push(data.title);
+  }
+  if (data.description) {
+    fields.push("description = ?");
+    params.push(data.description);
+  }
+  if (data.cover_image_path) {
+    fields.push("cover_image_path = ?");
+    params.push(data.cover_image_path);
+  }
+
+  if (fields.length === 0) return false;
+
+  const sql = `UPDATE stories SET ${fields.join(', ')} WHERE id = ?`;
+  params.push(storyId);
+
+  const [result] = await pool.execute<ResultSetHeader>(sql, params);
+  return result.affectedRows > 0;
+};
+
 export const searchStories = async (keyword?: string): Promise<IStory[]> => {
   let sql = `SELECT id, title, description, cover_image_path as coverImagePath, 
              author_id as authorId, status, view_count as viewCount, created_at as createdAt 

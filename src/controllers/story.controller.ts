@@ -63,6 +63,67 @@ export const createStoryWithGenres = async (req: AuthRequest, res: Response) => 
   }
 };
 
+export const updateStoryInfo = async (req: AuthRequest, res: Response) => {
+  try {
+    const storyId = parseInt(req.params.storyId);
+    const { title, description } = req.body;
+    const newPoster = req.file;
+    const currentUserId = req.user?.id;
+    const userRole = req.user?.role;
+
+    if (isNaN(storyId)) {
+      if (newPoster) fs.unlinkSync(newPoster.path);
+      return res.status(400).json({ success: false, error: "Invalid Story ID" });
+    }
+
+    const existingStory = await StoryService.getStoryById(storyId);
+    if (!existingStory) {
+      if (newPoster) fs.unlinkSync(newPoster.path);
+      return res.status(404).json({ success: false, error: "Story not found" });
+    }
+
+    if (userRole !== 'admin' && existingStory.authorId !== currentUserId) {
+      if (newPoster) fs.unlinkSync(newPoster.path);
+      return res.status(403).json({ success: false, error: "Unauthorized" });
+    }
+
+    const updateData: any = {};
+    if (title) updateData.title = title;
+    if (description) updateData.description = description;
+    
+    if (newPoster) {
+      updateData.cover_image_path = newPoster.filename;
+      if (existingStory.coverImagePath) {
+        const oldPath = path.join(__dirname, '../../assets/images/poster/stories', existingStory.coverImagePath);
+        if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+      }
+    }
+
+    if (Object.keys(updateData).length > 0) {
+      await StoryService.updateStory(storyId, updateData);
+    }
+
+    const updatedStory = await StoryService.getStoryById(storyId);
+    
+    const coverLink = updatedStory.coverImagePath 
+      ? `${req.protocol}://${req.get('host')}/assets/images/poster/stories/${updatedStory.coverImagePath}`
+      : null;
+
+    res.status(200).json({
+      success: true,
+      message: "Story updated successfully",
+      data: {
+        ...updatedStory,
+        chapterCount: Number(updatedStory.chapterCount),
+        coverLink 
+      }
+    });
+  } catch (error: any) {
+    if (req.file) fs.unlinkSync(req.file.path);
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
 export const getAllStories = async (req: AuthRequest, res: Response) => {
   try {
     const { search } = req.query;
