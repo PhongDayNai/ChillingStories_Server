@@ -13,6 +13,7 @@ export interface IStory {
   createdAt: Date;
   chapterCount?: number;
   lastUpdateAt?: Date | null;
+  genres?: string[];
 }
 
 export interface IChapter {

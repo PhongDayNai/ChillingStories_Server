@@ -11,13 +11,13 @@ const router = Router();
  * @desc    Create story metadata and upload poster image
  * @access  Private (Author/Admin)
  */
-router.post(
-  '/', 
-  authenticateToken, 
-  authorize(['author', 'admin']), 
-  posterUpload.single('poster'),
-  StoryController.createStory
-);
+// router.post(
+//   '/', 
+//   authenticateToken, 
+//   authorize(['author', 'admin']), 
+//   posterUpload.single('poster'),
+//   StoryController.createStory
+// );
 
 /**
  * @route   POST /api/stories
