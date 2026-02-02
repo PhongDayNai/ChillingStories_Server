@@ -113,10 +113,24 @@ router.post('/:storyId/favorite', authenticateToken, StoryController.toggleFavor
  * @access  Private (Author/Admin only)
  */
 router.patch(
-  '/chapters/:chapterId/title', 
+  '/chapters/:chapterId', 
   authenticateToken, 
   authorize(['author', 'admin']), 
+  chapterUpload.single('chapterFile'),
   StoryController.updateChapterInfo
+);
+
+/**
+ * @route   PATCH /api/stories/:storyId/chapters/:orderNum
+ * @desc    Update chapter by order number (Title and/or Content file)
+ * @access  Private (Author/Admin)
+ */
+router.patch(
+  '/:storyId/chapters/:orderNum',
+  authenticateToken,
+  authorize(['author', 'admin']),
+  chapterUpload.single('chapterFile'),
+  StoryController.updateChapterByOrderNum
 );
 
 /**

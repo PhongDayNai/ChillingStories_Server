@@ -5,9 +5,6 @@ import { AuthRequest } from '../models/user.model';
 import { ICreateStoryRequest } from '../models/story.model';
 import * as StoryService from '../services/story.service';
 
-/**
- * Handle story metadata creation
- */
 export const createStory = async (req: AuthRequest, res: Response) => {
   try {
     const authorId = req.user?.id;
@@ -40,9 +37,6 @@ export const createStory = async (req: AuthRequest, res: Response) => {
   }
 };
 
-/**
- * Handle full story metadata creation
- */
 export const createStoryWithGenres = async (req: AuthRequest, res: Response) => {
   try {
     const authorId = req.user?.id;
@@ -69,9 +63,6 @@ export const createStoryWithGenres = async (req: AuthRequest, res: Response) => 
   }
 };
 
-/**
- * Search and list stories
- */
 export const getAllStories = async (req: AuthRequest, res: Response) => {
   try {
     const { search } = req.query;
@@ -83,9 +74,6 @@ export const getAllStories = async (req: AuthRequest, res: Response) => {
   }
 };
 
-/**
- * Handle single file upload for a chapter with custom title and order
- */
 export const addSingleChapter = async (req: AuthRequest, res: Response) => {
   try {
     const { storyId, chapterTitle, orderNum } = req.body;
@@ -128,10 +116,6 @@ export const addSingleChapter = async (req: AuthRequest, res: Response) => {
   }
 };
 
-/**
- * Handle multi-file upload for chapters
- * Logic extracted from your current service file for better separation
- */
 export const addChaptersFromFiles = async (req: AuthRequest, res: Response) => {
   const files = req.files as Express.Multer.File[];
   const { storyId } = req.body;
@@ -169,9 +153,6 @@ export const addChaptersFromFiles = async (req: AuthRequest, res: Response) => {
   }
 };
 
-/**
- * Fetch chapters for a specific story
- */
 export const getStoryChapters = async (req: AuthRequest, res: Response) => {
   try {
     const storyId = parseInt(req.params.storyId);
@@ -293,22 +274,97 @@ export const updateChapterInfo = async (req: AuthRequest, res: Response) => {
   try {
     const chapterId = parseInt(req.params.chapterId);
     const { title } = req.body;
+    const file = req.file;
+    const currentUserId = req.user?.id;
+    const userRole = req.user?.role;
 
     if (isNaN(chapterId)) return res.status(400).json({ success: false, error: "Invalid Chapter ID" });
-    if (!title) return res.status(400).json({ success: false, error: "Title is required" });
 
-    const updated = await StoryService.updateChapterTitle(chapterId, title);
-    if (!updated) return res.status(404).json({ success: false, error: "Chapter not found" });
+    const authorId = await StoryService.getAuthorByChapterId(chapterId);
+    if (!authorId) return res.status(404).json({ success: false, error: "Chapter not found" });
 
-    res.status(200).json({ success: true, message: "Chapter title updated" });
+    if (userRole !== 'admin' && authorId !== currentUserId) {
+      if (file) fs.unlinkSync(file.path);
+      return res.status(403).json({ success: false, error: "You don't have permission to update this chapter" });
+    }
+
+    const updateData: { title?: string; content?: string } = {};
+    if (title) updateData.title = title;
+    
+    if (file) {
+      updateData.content = fs.readFileSync(file.path, 'utf8');
+      fs.unlinkSync(file.path);
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({ success: false, error: "Nothing to update" });
+    }
+
+    const updated = await StoryService.updateChapter(chapterId, updateData);
+    
+    res.status(200).json({ 
+      success: true, 
+      message: "Chapter updated successfully" 
+    });
   } catch (error: any) {
+    if (req.file) fs.unlinkSync(req.file.path);
     res.status(500).json({ success: false, error: error.message });
   }
 };
 
-/**
- * Fetch list of all genres for the app's filter/selection menus
- */
+export const updateChapterByOrderNum = async (req: AuthRequest, res: Response) => {
+  try {
+    const storyId = parseInt(req.params.storyId);
+    const orderNum = parseInt(req.params.orderNum);
+    const { title } = req.body;
+    const file = req.file;
+    const currentUserId = req.user?.id;
+    const userRole = req.user?.role;
+
+    if (isNaN(storyId) || isNaN(orderNum)) {
+      if (file) fs.unlinkSync(file.path);
+      return res.status(400).json({ success: false, error: "Invalid Story ID or Order Number" });
+    }
+
+    const authorId = await StoryService.getAuthorByStoryId(storyId);
+    if (!authorId) {
+      if (file) fs.unlinkSync(file.path);
+      return res.status(404).json({ success: false, error: "Story not found" });
+    }
+
+    if (userRole !== 'admin' && authorId !== currentUserId) {
+      if (file) fs.unlinkSync(file.path);
+      return res.status(403).json({ success: false, error: "Unauthorized: You are not the author of this story" });
+    }
+
+    const updateData: { title?: string; content?: string } = {};
+    if (title) updateData.title = title;
+    
+    if (file) {
+      updateData.content = fs.readFileSync(file.path, 'utf8');
+      fs.unlinkSync(file.path);
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({ success: false, error: "No data provided for update (title or file)" });
+    }
+
+    const isUpdated = await StoryService.updateChapterByOrder(storyId, orderNum, updateData);
+
+    if (!isUpdated) {
+      return res.status(404).json({ success: false, error: "Chapter not found with the given order number" });
+    }
+
+    res.status(200).json({ 
+      success: true, 
+      message: `Chapter ${orderNum} updated successfully` 
+    });
+  } catch (error: any) {
+    if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
 export const fetchAllGenres = async (req: Request, res: Response) => {
   try {
     const genres = await StoryService.getAllGenres();
@@ -322,9 +378,6 @@ export const fetchAllGenres = async (req: Request, res: Response) => {
   }
 };
 
-/**
- * Update genre assignments for a story
- */
 export const updateGenres = async (req: AuthRequest, res: Response) => {
   try {
     const storyId = parseInt(req.params.storyId);
@@ -345,9 +398,6 @@ export const updateGenres = async (req: AuthRequest, res: Response) => {
   }
 };
 
-/**
- * Get the 30 newest stories
- */
 export const getTopNew = async (req: AuthRequest, res: Response) => {
   try {
     const stories = await StoryService.getNewestStories();
@@ -366,9 +416,6 @@ export const getTopNew = async (req: AuthRequest, res: Response) => {
   }
 };
 
-/**
- * Get top 30 stories by views
- */
 export const getTopViewed = async (req: AuthRequest, res: Response) => {
   try {
     const stories = await StoryService.getTopStoriesByView();
@@ -390,9 +437,6 @@ export const getTopViewed = async (req: AuthRequest, res: Response) => {
   }
 };
 
-/**
- * Get top 30 stories by favorites
- */
 export const getTopFavorited = async (req: AuthRequest, res: Response) => {
   try {
     const stories = await StoryService.getTopStoriesByFavorite();
@@ -414,9 +458,6 @@ export const getTopFavorited = async (req: AuthRequest, res: Response) => {
   }
 };
 
-/**
- * Get stories for a specific user (Author Profile / My Stories)
- */
 export const getStoriesByUser = async (req: AuthRequest, res: Response) => {
   try {
     const userId = parseInt(req.params.userId);
@@ -441,9 +482,6 @@ export const getStoriesByUser = async (req: AuthRequest, res: Response) => {
   }
 };
 
-/**
- * Get top 30 newest stories with personal favorite status
- */
 export const getNewestForUser = async (req: AuthRequest, res: Response) => {
   try {
     const currentUserId = req.user?.id;
@@ -463,10 +501,6 @@ export const getNewestForUser = async (req: AuthRequest, res: Response) => {
     return res.status(500).json({ success: false, error: error.message });
   }
 };
-
-/**
- * Get top 30 viewed stories with personal favorite status
- */
 export const getTopViewedForUser = async (req: AuthRequest, res: Response) => {
   try {
     const currentUserId = req.user?.id;
@@ -487,9 +521,6 @@ export const getTopViewedForUser = async (req: AuthRequest, res: Response) => {
   }
 };
 
-/**
- * Get top 30 favorited stories with personal favorite status
- */
 export const getTopFavoritedForUser = async (req: AuthRequest, res: Response) => {
   try {
     const currentUserId = req.user?.id;
@@ -510,9 +541,6 @@ export const getTopFavoritedForUser = async (req: AuthRequest, res: Response) =>
   }
 };
 
-/**
- * Get stories by author with personal favorite status
- */
 export const getStoriesByAuthorForUser = async (req: AuthRequest, res: Response) => {
   try {
     const authorId = parseInt(req.params.userId);

@@ -231,10 +231,73 @@ export const getChapterByOrderWithProgress = async (storyId: number, orderNum: n
   return chapter;
 };
 
-export const updateChapterTitle = async (chapterId: number, newTitle: string): Promise<boolean> => {
-  const sql = `UPDATE chapters SET title = ? WHERE id = ?`;
-  const [result] = await pool.execute<ResultSetHeader>(sql, [newTitle, chapterId]);
+export const updateChapter = async (
+  chapterId: number, 
+  data: { title?: string; content?: string }
+): Promise<boolean> => {
+  const fields: string[] = [];
+  const params: any[] = [];
+
+  if (data.title) {
+    fields.push("title = ?");
+    params.push(data.title);
+  }
+
+  if (data.content) {
+    fields.push("content = ?");
+    params.push(data.content);
+  }
+
+  if (fields.length === 0) return false;
+
+  const sql = `UPDATE chapters SET ${fields.join(', ')} WHERE id = ?`;
+  params.push(chapterId);
+
+  const [result] = await pool.execute<ResultSetHeader>(sql, params);
   return result.affectedRows > 0;
+};
+
+export const updateChapterByOrder = async (
+  storyId: number,
+  orderNum: number,
+  data: { title?: string; content?: string }
+): Promise<boolean> => {
+  const fields: string[] = [];
+  const params: any[] = [];
+
+  if (data.title) {
+    fields.push("title = ?");
+    params.push(data.title);
+  }
+
+  if (data.content) {
+    fields.push("content = ?");
+    params.push(data.content);
+  }
+
+  if (fields.length === 0) return false;
+
+  const sql = `UPDATE chapters SET ${fields.join(', ')} WHERE story_id = ? AND order_num = ?`;
+  params.push(storyId, orderNum);
+
+  const [result] = await pool.execute<ResultSetHeader>(sql, params);
+  return result.affectedRows > 0;
+};
+
+export const getAuthorByChapterId = async (chapterId: number): Promise<number | null> => {
+  const sql = `
+    SELECT s.author_id 
+    FROM chapters c
+    JOIN stories s ON c.story_id = s.id
+    WHERE c.id = ?`;
+  const [rows] = await pool.execute<RowDataPacket[]>(sql, [chapterId]);
+  return rows.length > 0 ? rows[0].author_id : null;
+};
+
+export const getAuthorByStoryId = async (storyId: number): Promise<number | null> => {
+  const sql = `SELECT author_id FROM stories WHERE id = ?`;
+  const [rows] = await pool.execute<RowDataPacket[]>(sql, [storyId]);
+  return rows.length > 0 ? rows[0].author_id : null;
 };
 
 export const getAllGenres = async (): Promise<IGenre[]> => {
