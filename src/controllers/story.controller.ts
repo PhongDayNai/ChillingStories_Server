@@ -426,10 +426,9 @@ export const updateChapterByOrderNum = async (req: AuthRequest, res: Response) =
   }
 };
 
-export const fetchAllGenres = async (req: Request, res: Response) => {
+export const getAllGenres = async (req: AuthRequest, res: Response) => {
   try {
     const genres = await StoryService.getAllGenres();
-    
     res.status(200).json({ 
       success: true, 
       data: genres 

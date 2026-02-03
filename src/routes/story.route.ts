@@ -147,11 +147,11 @@ router.patch(
 );
 
 /**
- * @route   GET /api/stories/genres/all
+ * @route   GET /api/stories/genres
  * @desc    Get all available genres
  * @access  Public
  */
-// router.get('/genres/all', StoryController.fetchAllGenres);
+router.get('/genres/all', StoryController.getAllGenres);
 
 /**
  * @route   PUT /api/stories/:storyId/genres
