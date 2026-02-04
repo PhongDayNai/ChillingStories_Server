@@ -24,6 +24,35 @@ export const getProfile = async (req: AuthRequest, res: Response) => {
   }
 };
 
+export const getUserInfo = async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = parseInt(req.params.userId);
+    if (isNaN(userId)) {
+      return res.status(400).json({ success: false, error: "Invalid User ID" });
+    }
+
+    const user = await UserService.getUserById(userId);
+
+    if (!user) {
+      return res.status(404).json({ success: false, error: "User not found" });
+    }
+
+    const avatarLink = user.avatarUrl
+      ? `${req.protocol}://${req.get('host')}/assets/images/users/avatars/${user.avatarUrl}`
+      : null;
+
+    res.status(200).json({
+      success: true,
+      data: {
+        ...user,
+        avatarLink
+      }
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
 export const updateProfile = async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user?.id;

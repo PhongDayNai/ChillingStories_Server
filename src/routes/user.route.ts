@@ -14,6 +14,13 @@ const router = Router();
 router.get('/profile', authenticateToken, UserController.getProfile);
 
 /**
+ * @route   GET /api/users/:userId
+ * @desc    Get user profile information
+ * @access  Public
+ */
+router.get('/:userId', UserController.getUserInfo);
+
+/**
  * @route   PUT /api/users/profile
  * @desc    Update user profile details
  * @access  Private
