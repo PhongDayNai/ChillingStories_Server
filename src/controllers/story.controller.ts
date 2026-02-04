@@ -127,9 +127,15 @@ export const updateStoryInfo = async (req: AuthRequest, res: Response) => {
 export const getAllStories = async (req: AuthRequest, res: Response) => {
   try {
     const { search } = req.query;
-    const stories = await StoryService.searchStories(search as string);
     
-    res.status(200).json({ success: true, data: stories });
+    const stories = await StoryService.searchStories(search as string, req.user?.id);
+    
+    const formattedStories = finalizeStoryLinks(req, stories);
+    
+    res.status(200).json({ 
+      success: true, 
+      data: formattedStories 
+    });
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
   }
@@ -460,168 +466,38 @@ export const updateGenres = async (req: AuthRequest, res: Response) => {
 
 export const getTopNew = async (req: AuthRequest, res: Response) => {
   try {
-    const stories = await StoryService.getNewestStories();
-    
-    const formattedStories = stories.map(story => ({
-      ...story,
-      chapterCount: Number(story.chapterCount),
-      coverLink: story.coverImagePath 
-        ? `${req.protocol}://${req.get('host')}/assets/images/poster/stories/${story.coverImagePath}` 
-        : null
-    }));
-
-    return res.status(200).json({ success: true, data: formattedStories });
+    const stories = await StoryService.getNewestStoriesUnified(req.user?.id);
+    res.status(200).json({ success: true, data: finalizeStoryLinks(req, stories) });
   } catch (error: any) {
-    return res.status(500).json({ success: false, error: error.message });
+    res.status(500).json({ success: false, error: error.message });
   }
 };
 
 export const getTopViewed = async (req: AuthRequest, res: Response) => {
   try {
-    const stories = await StoryService.getTopStoriesByView();
-    
-    const formattedStories = stories.map(story => ({
-      ...story,
-      chapterCount: Number(story.chapterCount),
-      coverLink: story.coverImagePath 
-        ? `${req.protocol}://${req.get('host')}/assets/images/poster/stories/${story.coverImagePath}` 
-        : null
-    }));
-
-    return res.status(200).json({ 
-      success: true, 
-      data: formattedStories 
-    });
+    const stories = await StoryService.getTopViewsUnified(req.user?.id);
+    res.status(200).json({ success: true, data: finalizeStoryLinks(req, stories) });
   } catch (error: any) {
-    return res.status(500).json({ success: false, error: error.message });
+    res.status(500).json({ success: false, error: error.message });
   }
 };
 
 export const getTopFavorited = async (req: AuthRequest, res: Response) => {
   try {
-    const stories = await StoryService.getTopStoriesByFavorite();
-    
-    const formattedStories = stories.map(story => ({
-      ...story,
-      chapterCount: Number(story.chapterCount),
-      coverLink: story.coverImagePath 
-        ? `${req.protocol}://${req.get('host')}/assets/images/poster/stories/${story.coverImagePath}` 
-        : null
-    }));
-
-    return res.status(200).json({ 
-      success: true, 
-      data: formattedStories 
-    });
+    const stories = await StoryService.getTopFavoritesUnified(req.user?.id);
+    res.status(200).json({ success: true, data: finalizeStoryLinks(req, stories) });
   } catch (error: any) {
-    return res.status(500).json({ success: false, error: error.message });
+    res.status(500).json({ success: false, error: error.message });
   }
 };
 
-export const getStoriesByUser = async (req: AuthRequest, res: Response) => {
-  try {
-    const userId = parseInt(req.params.userId);
-    
-    if (isNaN(userId)) {
-      return res.status(400).json({ success: false, error: "Invalid User ID" });
-    }
-
-    const stories = await StoryService.getStoriesByAuthor(userId);
-    
-    const formattedStories = stories.map(story => ({
-      ...story,
-      chapterCount: Number(story.chapterCount),
-      coverLink: story.coverImagePath 
-        ? `${req.protocol}://${req.get('host')}/assets/images/poster/stories/${story.coverImagePath}` 
-        : null
-    }));
-
-    return res.status(200).json({ success: true, data: formattedStories });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, error: error.message });
-  }
-};
-
-export const getNewestForUser = async (req: AuthRequest, res: Response) => {
-  try {
-    const currentUserId = req.user?.id;
-    const stories = await StoryService.getNewestStoriesForUser(currentUserId);
-    
-    const formattedStories = stories.map(story => ({
-      ...story,
-      chapterCount: Number(story.chapterCount),
-      isFavorited: !!story.isFavorited, // Convert 1/0 to true/false
-      coverLink: story.coverImagePath 
-        ? `${req.protocol}://${req.get('host')}/assets/images/poster/stories/${story.coverImagePath}` 
-        : null
-    }));
-
-    return res.status(200).json({ success: true, data: formattedStories });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, error: error.message });
-  }
-};
-export const getTopViewedForUser = async (req: AuthRequest, res: Response) => {
-  try {
-    const currentUserId = req.user?.id;
-    const stories = await StoryService.getTopStoriesByViewForUser(currentUserId);
-    
-    const formattedStories = stories.map(story => ({
-      ...story,
-      chapterCount: Number(story.chapterCount),
-      isFavorited: !!story.isFavorited,
-      coverLink: story.coverImagePath 
-        ? `${req.protocol}://${req.get('host')}/assets/images/poster/stories/${story.coverImagePath}` 
-        : null
-    }));
-
-    return res.status(200).json({ success: true, data: formattedStories });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, error: error.message });
-  }
-};
-
-export const getTopFavoritedForUser = async (req: AuthRequest, res: Response) => {
-  try {
-    const currentUserId = req.user?.id;
-    const stories = await StoryService.getTopStoriesByFavoriteForUser(currentUserId);
-    
-    const formattedStories = stories.map(story => ({
-      ...story,
-      chapterCount: Number(story.chapterCount),
-      isFavorited: !!story.isFavorited,
-      coverLink: story.coverImagePath 
-        ? `${req.protocol}://${req.get('host')}/assets/images/poster/stories/${story.coverImagePath}` 
-        : null
-    }));
-
-    return res.status(200).json({ success: true, data: formattedStories });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, error: error.message });
-  }
-};
-
-export const getStoriesByAuthorForUser = async (req: AuthRequest, res: Response) => {
+export const getStoriesByAuthor = async (req: AuthRequest, res: Response) => {
   try {
     const authorId = parseInt(req.params.userId);
-    const currentUserId = req.user?.id;
-
-    if (isNaN(authorId)) return res.status(400).json({ success: false, error: "Invalid Author ID" });
-
-    const stories = await StoryService.getStoriesByAuthorForUser(authorId, currentUserId);
-    
-    const formattedStories = stories.map(story => ({
-      ...story,
-      chapterCount: Number(story.chapterCount),
-      isFavorited: !!story.isFavorited,
-      coverLink: story.coverImagePath 
-        ? `${req.protocol}://${req.get('host')}/assets/images/poster/stories/${story.coverImagePath}` 
-        : null
-    }));
-
-    return res.status(200).json({ success: true, data: formattedStories });
+    const stories = await StoryService.getStoriesByAuthorUnified(authorId, req.user?.id);
+    res.status(200).json({ success: true, data: finalizeStoryLinks(req, stories) });
   } catch (error: any) {
-    return res.status(500).json({ success: false, error: error.message });
+    res.status(500).json({ success: false, error: error.message });
   }
 };
 
@@ -744,4 +620,13 @@ export const removeChapterByOrder = async (req: AuthRequest, res: Response) => {
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
   }
+};
+
+const finalizeStoryLinks = (req: any, stories: any[]) => {
+  const baseUrl = `${req.protocol}://${req.get('host')}`;
+  return stories.map(s => ({
+    ...s,
+    coverLink: s.cover_image_path ? `${baseUrl}/assets/images/poster/stories/${s.cover_image_path}` : null,
+    authorAvatarLink: s.authorAvatarUrl ? `${baseUrl}/assets/images/users/avatars/${s.authorAvatarUrl}` : null
+  }));
 };

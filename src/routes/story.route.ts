@@ -47,10 +47,10 @@ router.patch(
 
 /**
  * @route   GET /api/stories
- * @desc    Search stories (Uses FULLTEXT index)
- * @access  Public
+ * @desc    Tìm kiếm truyện (Sử dụng FULLTEXT index). 
+ * @access  Public / Private (Optional Token)
  */
-router.get('/', StoryController.getAllStories);
+router.get('/', authenticateToken, StoryController.getAllStories);
 
 /**
  * @route   POST /api/stories/chapters
@@ -187,39 +187,37 @@ router.get('/top/views', StoryController.getTopViewed);
 router.get('/top/favorites', StoryController.getTopFavorited);
 
 /**
- * @route   GET /api/stories/user/:userId
- * @desc    Get all stories authored by a specific user
- * @access  Public
+ * @route   GET /api/stories/top/new
+ * @desc    Lấy danh sách 30 truyện mới nhất. 
+ * Trả về đầy đủ thông tin tác giả (tên, avatar), danh sách thể loại và trạng thái yêu thích nếu người dùng đã đăng nhập.
+ * @access  Public / Private (Optional Token)
  */
-router.get('/user/:userId', StoryController.getStoriesByUser);
+router.get('/top/new', authenticateToken, StoryController.getTopNew);
 
 /**
- * @route   GET /api/stories/personalized/new
- * @desc    Get top 30 newest stories with personal favorite status
- * @access  Private (Authenticated)
+ * @route   GET /api/stories/top/views
+ * @desc    Lấy danh sách 30 truyện có lượt xem cao nhất.
+ * Tự động gộp thông tin tác giả và trạng thái cá nhân hóa (isFavorited) dựa trên UserId.
+ * @access  Public / Private (Optional Token)
  */
-router.get('/personalized/new', authenticateToken, StoryController.getNewestForUser);
+router.get('/top/views', authenticateToken, StoryController.getTopViewed);
 
 /**
- * @route   GET /api/stories/personalized/views
- * @desc    Get top 30 viewed stories with personal favorite status
- * @access  Private (Authenticated)
+ * @route   GET /api/stories/top/favorites
+ * @desc    Lấy danh sách 30 truyện có lượt yêu thích cao nhất hệ thống.
+ * Dữ liệu bao gồm mảng genres đã được chuẩn hóa từ string sang mảng chuỗi.
+ * @access  Public / Private (Optional Token)
  */
-router.get('/personalized/views', authenticateToken, StoryController.getTopViewedForUser);
+router.get('/top/favorites', authenticateToken, StoryController.getTopFavorited);
 
 /**
- * @route   GET /api/stories/personalized/favorites
- * @desc    Get top 30 favorited stories with personal favorite status
- * @access  Private (Authenticated)
+ * @route   GET /api/stories/author/:userId
+ * @desc    Lấy toàn bộ danh sách truyện được sáng tác bởi một tác giả cụ thể.
+ * @param   {string} userId - ID của tác giả cần lấy truyện (truyền qua params).
+ * @access  Public / Private (Optional Token)
+ * @returns {Object} Trả về mảng truyện với cấu trúc đồng nhất như các hàm Top.
  */
-router.get('/personalized/favorites', authenticateToken, StoryController.getTopFavoritedForUser);
-
-/**
- * @route   GET /api/stories/personalized/author/:userId
- * @desc    Get author stories with personal favorite status
- * @access  Private (Authenticated)
- */
-router.get('/personalized/author/:userId', authenticateToken, StoryController.getStoriesByAuthorForUser);
+router.get('/author/:userId', authenticateToken, StoryController.getStoriesByAuthor);
 
 /**
  * @route   GET /api/stories/me/favorites

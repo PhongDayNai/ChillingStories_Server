@@ -104,17 +104,8 @@ export const updateStory = async (
   return isInfoUpdated;
 };
 
-export const searchStories = async (keyword?: string): Promise<IStory[]> => {
-  let sql = `
-    SELECT 
-      s.id, s.title, s.description, s.cover_image_path as coverImagePath, 
-      s.author_id as authorId, s.status, s.view_count as viewCount, s.created_at as createdAt,
-      (SELECT GROUP_CONCAT(g.name) 
-       FROM story_genres sg 
-       JOIN genres g ON sg.genre_id = g.id 
-       WHERE sg.story_id = s.id) as genres
-    FROM stories s`;
-  
+export const searchStories = async (keyword?: string, userId?: number): Promise<any[]> => {
+  let sql = `${getBaseSelect(userId)}`;
   const params: any[] = [];
 
   if (keyword) {
@@ -122,12 +113,7 @@ export const searchStories = async (keyword?: string): Promise<IStory[]> => {
     params.push(keyword);
   }
 
-  const [rows] = await pool.execute<RowDataPacket[]>(sql, params);
-
-  return rows.map(row => ({
-    ...row,
-    genres: row.genres ? row.genres.split(',') : []
-  })) as IStory[];
+  return executeStoryQuery(sql, params);
 };
 
 export const addChapter = async (data: ICreateChapterRequest): Promise<number> => {
@@ -406,226 +392,24 @@ export const updateStoryGenres = async (storyId: number, genres: string[]): Prom
   }
 };
 
-export const getNewestStories = async (): Promise<any[]> => {
-  const sql = `
-    SELECT 
-      s.id, s.title, s.description, s.cover_image_path as coverImagePath, 
-      s.author_id as authorId, u.username as authorName,
-      s.status, s.view_count as viewCount, s.favorite_count as favoriteCount, 
-      s.created_at as createdAt,
-      (SELECT COUNT(*) FROM chapters WHERE story_id = s.id) as chapterCount,
-      (SELECT MAX(created_at) FROM chapters WHERE story_id = s.id) as lastUpdateAt,
-      (SELECT GROUP_CONCAT(g.name) 
-       FROM story_genres sg 
-       JOIN genres g ON sg.genre_id = g.id 
-       WHERE sg.story_id = s.id) as genres
-    FROM stories s
-    LEFT JOIN users u ON s.author_id = u.id
-    ORDER BY s.created_at DESC 
-    LIMIT 30`;
-    
-  const [rows] = await pool.execute<RowDataPacket[]>(sql);
-  
-  return rows.map(row => ({
-    ...row,
-    chapterCount: Number(row.chapterCount),
-    genres: row.genres ? row.genres.split(',') : []
-  }));
+export const getNewestStoriesUnified = async (userId?: number) => {
+  const sql = `${getBaseSelect(userId)} ORDER BY s.created_at DESC LIMIT 30`;
+  return executeStoryQuery(sql, []);
 };
 
-export const getTopStoriesByView = async (): Promise<any[]> => {
-  const sql = `
-    SELECT 
-      s.id, s.title, s.description, s.cover_image_path as coverImagePath, 
-      s.author_id as authorId, u.username as authorName,
-      s.status, s.view_count as viewCount, s.favorite_count as favoriteCount, 
-      s.created_at as createdAt,
-      (SELECT COUNT(*) FROM chapters WHERE story_id = s.id) as chapterCount,
-      (SELECT MAX(created_at) FROM chapters WHERE story_id = s.id) as lastUpdateAt,
-      (SELECT GROUP_CONCAT(g.name) 
-       FROM story_genres sg 
-       JOIN genres g ON sg.genre_id = g.id 
-       WHERE sg.story_id = s.id) as genres
-    FROM stories s
-    LEFT JOIN users u ON s.author_id = u.id
-    ORDER BY s.view_count DESC 
-    LIMIT 30`;
-    
-  const [rows] = await pool.execute<RowDataPacket[]>(sql);
-  
-  return rows.map(row => ({
-    ...row,
-    chapterCount: Number(row.chapterCount),
-    genres: row.genres ? row.genres.split(',') : []
-  }));
+export const getTopViewsUnified = async (userId?: number) => {
+  const sql = `${getBaseSelect(userId)} ORDER BY s.view_count DESC LIMIT 30`;
+  return executeStoryQuery(sql, []);
 };
 
-export const getTopStoriesByFavorite = async (): Promise<any[]> => {
-  const sql = `
-    SELECT 
-      s.id, s.title, s.description, s.cover_image_path as coverImagePath, 
-      s.author_id as authorId, u.username as authorName,
-      s.status, s.view_count as viewCount, s.favorite_count as favoriteCount, 
-      s.created_at as createdAt,
-      (SELECT COUNT(*) FROM chapters WHERE story_id = s.id) as chapterCount,
-      (SELECT MAX(created_at) FROM chapters WHERE story_id = s.id) as lastUpdateAt,
-      (SELECT GROUP_CONCAT(g.name) 
-       FROM story_genres sg 
-       JOIN genres g ON sg.genre_id = g.id 
-       WHERE sg.story_id = s.id) as genres
-    FROM stories s
-    LEFT JOIN users u ON s.author_id = u.id
-    ORDER BY s.favorite_count DESC 
-    LIMIT 30`;
-    
-  const [rows] = await pool.execute<RowDataPacket[]>(sql);
-  
-  return rows.map(row => ({
-    ...row,
-    chapterCount: Number(row.chapterCount),
-    genres: row.genres ? row.genres.split(',') : []
-  }));
+export const getTopFavoritesUnified = async (userId?: number) => {
+  const sql = `${getBaseSelect(userId)} ORDER BY s.favorite_count DESC LIMIT 30`;
+  return executeStoryQuery(sql, []);
 };
 
-export const getStoriesByAuthor = async (userId: number): Promise<any[]> => {
-  const sql = `
-    SELECT 
-      s.id, s.title, s.description, s.cover_image_path as coverImagePath, 
-      s.status, s.view_count as viewCount, s.favorite_count as favoriteCount, 
-      s.created_at as createdAt,
-      (SELECT COUNT(*) FROM chapters WHERE story_id = s.id) as chapterCount,
-      (SELECT MAX(created_at) FROM chapters WHERE story_id = s.id) as lastUpdateAt,
-      (SELECT GROUP_CONCAT(g.name) 
-       FROM story_genres sg 
-       JOIN genres g ON sg.genre_id = g.id 
-       WHERE sg.story_id = s.id) as genres
-    FROM stories s
-    WHERE s.author_id = ?
-    ORDER BY s.created_at DESC`;
-    
-  const [rows] = await pool.execute<RowDataPacket[]>(sql, [userId]);
-  
-  return rows.map(row => ({
-    ...row,
-    chapterCount: Number(row.chapterCount),
-    genres: row.genres ? row.genres.split(',') : []
-  }));
-};
-
-export const getNewestStoriesForUser = async (currentUserId?: number): Promise<any[]> => {
-  const sql = `
-    SELECT 
-      s.id, s.title, s.description, s.cover_image_path as coverImagePath, 
-      s.author_id as authorId, u.username as authorName,
-      s.status, s.view_count as viewCount, s.favorite_count as favoriteCount, 
-      s.created_at as createdAt,
-      (SELECT COUNT(*) FROM chapters WHERE story_id = s.id) as chapterCount,
-      (SELECT MAX(created_at) FROM chapters WHERE story_id = s.id) as lastUpdateAt,
-      EXISTS(SELECT 1 FROM favorites WHERE user_id = ? AND story_id = s.id) as isFavorited,
-      (SELECT GROUP_CONCAT(g.name) 
-       FROM story_genres sg 
-       JOIN genres g ON sg.genre_id = g.id 
-       WHERE sg.story_id = s.id) as genres
-    FROM stories s
-    LEFT JOIN users u ON s.author_id = u.id
-    ORDER BY s.created_at DESC 
-    LIMIT 30`;
-    
-  const [rows] = await pool.execute<RowDataPacket[]>(sql, [currentUserId || 0]);
-  
-  return rows.map(row => ({
-    ...row,
-    chapterCount: Number(row.chapterCount),
-    isFavorited: !!row.isFavorited,
-    genres: row.genres ? row.genres.split(',') : []
-  }));
-};
-
-export const getTopStoriesByViewForUser = async (currentUserId?: number): Promise<any[]> => {
-  const sql = `
-    SELECT 
-      s.id, s.title, s.description, s.cover_image_path as coverImagePath, 
-      s.author_id as authorId, u.username as authorName,
-      s.status, s.view_count as viewCount, s.favorite_count as favoriteCount, 
-      s.created_at as createdAt,
-      (SELECT COUNT(*) FROM chapters WHERE story_id = s.id) as chapterCount,
-      (SELECT MAX(created_at) FROM chapters WHERE story_id = s.id) as lastUpdateAt,
-      EXISTS(SELECT 1 FROM favorites WHERE user_id = ? AND story_id = s.id) as isFavorited,
-      (SELECT GROUP_CONCAT(g.name) 
-       FROM story_genres sg 
-       JOIN genres g ON sg.genre_id = g.id 
-       WHERE sg.story_id = s.id) as genres
-    FROM stories s
-    LEFT JOIN users u ON s.author_id = u.id
-    ORDER BY s.view_count DESC 
-    LIMIT 30`;
-    
-  const [rows] = await pool.execute<RowDataPacket[]>(sql, [currentUserId || 0]);
-  
-  return rows.map(row => ({
-    ...row,
-    chapterCount: Number(row.chapterCount),
-    isFavorited: !!row.isFavorited,
-    genres: row.genres ? row.genres.split(',') : []
-  }));
-};
-
-export const getTopStoriesByFavoriteForUser = async (currentUserId?: number): Promise<any[]> => {
-  const sql = `
-    SELECT 
-      s.id, s.title, s.description, s.cover_image_path as coverImagePath, 
-      s.author_id as authorId, u.username as authorName,
-      s.status, s.view_count as viewCount, s.favorite_count as favoriteCount, 
-      s.created_at as createdAt,
-      (SELECT COUNT(*) FROM chapters WHERE story_id = s.id) as chapterCount,
-      (SELECT MAX(created_at) FROM chapters WHERE story_id = s.id) as lastUpdateAt,
-      EXISTS(SELECT 1 FROM favorites WHERE user_id = ? AND story_id = s.id) as isFavorited,
-      (SELECT GROUP_CONCAT(g.name) 
-       FROM story_genres sg 
-       JOIN genres g ON sg.genre_id = g.id 
-       WHERE sg.story_id = s.id) as genres
-    FROM stories s
-    LEFT JOIN users u ON s.author_id = u.id
-    ORDER BY s.favorite_count DESC 
-    LIMIT 30`;
-    
-  const [rows] = await pool.execute<RowDataPacket[]>(sql, [currentUserId || 0]);
-  
-  return rows.map(row => ({
-    ...row,
-    chapterCount: Number(row.chapterCount),
-    isFavorited: !!row.isFavorited,
-    genres: row.genres ? row.genres.split(',') : []
-  }));
-};
-
-export const getStoriesByAuthorForUser = async (authorId: number, currentUserId?: number): Promise<any[]> => {
-  const sql = `
-    SELECT 
-      s.id, s.title, s.description, s.cover_image_path as coverImagePath, 
-      s.author_id as authorId, u.username as authorName,
-      s.status, s.view_count as viewCount, s.favorite_count as favoriteCount, 
-      s.created_at as createdAt,
-      (SELECT COUNT(*) FROM chapters WHERE story_id = s.id) as chapterCount,
-      (SELECT MAX(created_at) FROM chapters WHERE story_id = s.id) as lastUpdateAt,
-      EXISTS(SELECT 1 FROM favorites WHERE user_id = ? AND story_id = s.id) as isFavorited,
-      (SELECT GROUP_CONCAT(g.name) 
-       FROM story_genres sg 
-       JOIN genres g ON sg.genre_id = g.id 
-       WHERE sg.story_id = s.id) as genres
-    FROM stories s
-    LEFT JOIN users u ON s.author_id = u.id
-    WHERE s.author_id = ?
-    ORDER BY s.created_at DESC`;
-    
-  const [rows] = await pool.execute<RowDataPacket[]>(sql, [currentUserId || 0, authorId]);
-  
-  return rows.map(row => ({
-    ...row,
-    chapterCount: Number(row.chapterCount),
-    isFavorited: !!row.isFavorited,
-    genres: row.genres ? row.genres.split(',') : []
-  }));
+export const getStoriesByAuthorUnified = async (authorId: number, userId?: number) => {
+  const sql = `${getBaseSelect(userId)} WHERE s.author_id = ? ORDER BY s.created_at DESC`;
+  return executeStoryQuery(sql, [authorId]);
 };
 
 export const getFavoritedStories = async (userId: number): Promise<any[]> => {
@@ -714,3 +498,22 @@ export const deleteChapterByOrder = async (storyId: number, orderNum: number): P
   const [result] = await pool.execute<ResultSetHeader>(sql, [storyId, orderNum]);
   return result.affectedRows > 0;
 };
+
+const executeStoryQuery = async (sql: string, params: any[]) => {
+  const [rows] = await pool.execute<RowDataPacket[]>(sql, params);
+  return rows.map(row => ({
+    ...row,
+    chapterCount: Number(row.chapterCount || 0),
+    isFavorited: !!row.isFavorited,
+    genres: row.genres ? row.genres.split(',') : []
+  }));
+};
+
+const getBaseSelect = (currentUserId?: number) => `
+  SELECT s.*, u.username as authorName, u.avatar_url as authorAvatarUrl,
+  ${currentUserId ? `EXISTS(SELECT 1 FROM favorites WHERE user_id = ${currentUserId} AND story_id = s.id)` : '0'} as isFavorited,
+  (SELECT COUNT(*) FROM chapters WHERE story_id = s.id) as chapterCount,
+  (SELECT MAX(created_at) FROM chapters WHERE story_id = s.id) as lastUpdateAt,
+  (SELECT GROUP_CONCAT(g.name) FROM story_genres sg JOIN genres g ON sg.genre_id = g.id WHERE sg.story_id = s.id) as genres
+  FROM stories s 
+  LEFT JOIN users u ON s.author_id = u.id`;
