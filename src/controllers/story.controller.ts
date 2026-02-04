@@ -491,6 +491,27 @@ export const getTopFavorited = async (req: AuthRequest, res: Response) => {
   }
 };
 
+// export const getStoriesByAuthor = async (req: AuthRequest, res: Response) => {
+//   try {
+//     const authorId = parseInt(req.params.userId);
+    
+//     if (isNaN(authorId)) {
+//       return res.status(400).json({ success: false, error: "ID tác giả không hợp lệ" });
+//     }
+
+//     const viewerId = req.user?.id;
+
+//     const stories = await StoryService.getStoriesByAuthorUnified(authorId, viewerId);
+    
+//     res.status(200).json({ 
+//       success: true, 
+//       data: finalizeStoryLinks(req, stories) 
+//     });
+//   } catch (error: any) {
+//     res.status(500).json({ success: false, error: error.message });
+//   }
+// };
+
 export const getStoriesByAuthor = async (req: AuthRequest, res: Response) => {
   try {
     const authorId = parseInt(req.params.userId);

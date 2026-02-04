@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import * as StoryController from '../controllers/story.controller';
-import { authenticateToken } from '../middlewares/auth.middleware';
+import { authenticateToken, optionalAuthenticate } from '../middlewares/auth.middleware';
 import { authorize } from '../middlewares/role.middleware';
 import { chapterUpload, posterUpload } from '../middlewares/upload.middleware';
 
@@ -167,32 +167,11 @@ router.put(
 
 /**
  * @route   GET /api/stories/top/new
- * @desc    Get 30 most recently created stories
- * @access  Public
- */
-router.get('/top/new', StoryController.getTopNew);
-
-/**
- * @route   GET /api/stories/top/views
- * @desc    Get top 30 stories by view count
- * @access  Public
- */
-router.get('/top/views', StoryController.getTopViewed);
-
-/**
- * @route   GET /api/stories/top/favorites
- * @desc    Get top 30 stories by favorite count
- * @access  Public
- */
-router.get('/top/favorites', StoryController.getTopFavorited);
-
-/**
- * @route   GET /api/stories/top/new
  * @desc    Lấy danh sách 30 truyện mới nhất. 
  * Trả về đầy đủ thông tin tác giả (tên, avatar), danh sách thể loại và trạng thái yêu thích nếu người dùng đã đăng nhập.
  * @access  Public / Private (Optional Token)
  */
-router.get('/top/new', authenticateToken, StoryController.getTopNew);
+router.get('/top/new', optionalAuthenticate, StoryController.getTopNew);
 
 /**
  * @route   GET /api/stories/top/views
@@ -200,7 +179,7 @@ router.get('/top/new', authenticateToken, StoryController.getTopNew);
  * Tự động gộp thông tin tác giả và trạng thái cá nhân hóa (isFavorited) dựa trên UserId.
  * @access  Public / Private (Optional Token)
  */
-router.get('/top/views', authenticateToken, StoryController.getTopViewed);
+router.get('/top/views', optionalAuthenticate, StoryController.getTopViewed);
 
 /**
  * @route   GET /api/stories/top/favorites
@@ -208,7 +187,7 @@ router.get('/top/views', authenticateToken, StoryController.getTopViewed);
  * Dữ liệu bao gồm mảng genres đã được chuẩn hóa từ string sang mảng chuỗi.
  * @access  Public / Private (Optional Token)
  */
-router.get('/top/favorites', authenticateToken, StoryController.getTopFavorited);
+router.get('/top/favorites', optionalAuthenticate, StoryController.getTopFavorited);
 
 /**
  * @route   GET /api/stories/author/:userId
@@ -217,7 +196,7 @@ router.get('/top/favorites', authenticateToken, StoryController.getTopFavorited)
  * @access  Public / Private (Optional Token)
  * @returns {Object} Trả về mảng truyện với cấu trúc đồng nhất như các hàm Top.
  */
-router.get('/author/:userId', authenticateToken, StoryController.getStoriesByAuthor);
+router.get('/author/:userId', optionalAuthenticate, StoryController.getStoriesByAuthor);
 
 /**
  * @route   GET /api/stories/me/favorites
