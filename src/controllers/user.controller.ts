@@ -38,7 +38,7 @@ export const getUserInfo = async (req: AuthRequest, res: Response) => {
     }
 
     const avatarLink = user.avatarUrl
-      ? `${req.protocol}://${req.get('host')}/assets/images/users/avatars/${user.avatarUrl}`
+      ? `${req.protocol}://${req.get('host')}${user.avatarUrl}`
       : null;
 
     res.status(200).json({
