@@ -648,6 +648,6 @@ const finalizeStoryLinks = (req: any, stories: any[]) => {
   return stories.map(s => ({
     ...s,
     coverLink: s.cover_image_path ? `${baseUrl}/assets/images/poster/stories/${s.cover_image_path}` : null,
-    authorAvatarLink: s.authorAvatarUrl ? `${baseUrl}/assets/images/users/avatars/${s.authorAvatarUrl}` : null
+    authorAvatarLink: s.authorAvatarUrl ? `${baseUrl}${s.authorAvatarUrl}` : null
   }));
 };
