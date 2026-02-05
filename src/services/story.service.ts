@@ -276,7 +276,6 @@ export const getChapterByOrderWithProgress = async (storyId: number, orderNum: n
   
   if (chapter && userId) {
     await updateReadingProgress(userId, storyId, chapter.id, chapter.orderNum);
-    incrementViewCount(storyId);
   }
   
   return chapter;
