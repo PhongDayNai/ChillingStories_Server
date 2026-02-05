@@ -37,15 +37,20 @@ export const getUserInfo = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ success: false, error: "User not found" });
     }
 
-    const avatarLink = user.avatarUrl
+    const avatarUrl = user.avatarUrl
       ? `${req.protocol}://${req.get('host')}${user.avatarUrl}`
       : null;
 
     res.status(200).json({
       success: true,
       data: {
-        ...user,
-        avatarLink
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        phone: user.phone || null,
+        role: user.role,
+        avatarUrl,
+        createdAt: user.createdAt
       }
     });
   } catch (error: any) {
